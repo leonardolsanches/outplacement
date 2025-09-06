@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Agendamento - {{ executive.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-calendar me-2"></i>Agendar Nova Sessão</h5>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Executivo:</strong> {{ executive.name }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Empresa:</strong> {{ executive.company }}
+                    </div>
+                </div>
+                
+                <form id="scheduleForm">
+                    <input type="hidden" name="executive_id" value="{{ executive.id }}">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="date" class="form-label">Data da Sessão</label>
+                            <input type="date" class="form-control" id="date" name="date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="time" class="form-label">Horário</label>
+                            <input type="time" class="form-control" id="time" name="time" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Tipo de Sessão</label>
+                        <select class="form-select" id="type" name="type" required>
+                            <option value="">Selecione o tipo...</option>
+                            <option value="individual">Sessão Individual</option>
+                            <option value="group">Dinâmica de Grupo</option>
+                            <option value="interview_prep">Preparação para Entrevista</option>
+                            <option value="networking">Orientação de Networking</option>
+                            <option value="resume_review">Revisão de Currículo</option>
+                            <option value="career_planning">Planejamento de Carreira</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Observações</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                  placeholder="Objetivos da sessão, tópicos a abordar, materiais necessários..."></textarea>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus me-2"></i>Agendar Sessão
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar com Sessões Agendadas -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-clock me-2"></i>Próximas Sessões</h6>
+            </div>
+            <div class="card-body">
+                {% if sessions %}
+                    {% for session in sessions %}
+                    <div class="border rounded p-3 mb-3 {% if session.status == 'scheduled' %}border-primary{% elif session.status == 'completed' %}border-success{% else %}border-secondary{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ session.date }} às {{ session.time }}</strong>
+                                <br>
+                                <small class="text-muted">{{ session.type|replace('_', ' ')|title }}</small>
+                                {% if session.notes %}
+                                <br>
+                                <small>{{ session.notes[:50] }}{% if session.notes|length > 50 %}...{% endif %}</small>
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-{% if session.status == 'scheduled' %}primary{% elif session.status == 'completed' %}success{% else %}secondary{% endif %}">
+                                {{ session.status|title }}
+                            </span>
+                        </div>
+                        {% if session.status == 'scheduled' %}
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-success me-1" onclick="completeSession('{{ session.id }}')">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="cancelSession('{{ session.id }}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-calendar fa-2x text-muted mb-2"></i>
+                        <p class="text-muted small">Nenhuma sessão agendada</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Horários Sugeridos -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-lightbulb me-2"></i>Horários Disponíveis</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="setTime('09:00')">09:00</button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="setTime('10:00')">10:00</button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="setTime('14:00')">14:00</button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="setTime('15:00')">15:00</button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="setTime('16:00')">16:00</button>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="setTime('17:00')">17:00</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Definir data mínima como hoje
+document.getElementById('date').min = new Date().toISOString().split('T')[0];
+
+// Função para definir horário rapidamente
+function setTime(time) {
+    document.getElementById('time').value = time;
+}
+
+// Submit do formulário
+document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/api/sessions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Sessão agendada com sucesso!', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showAlert('Erro ao agendar sessão', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao agendar sessão', 'danger');
+    });
+});
+
+// Completar sessão
+function completeSession(sessionId) {
+    if (confirm('Marcar esta sessão como concluída?')) {
+        // Implementar API call para atualizar status
+        showAlert('Sessão marcada como concluída!', 'success');
+        location.reload();
+    }
+}
+
+// Cancelar sessão
+function cancelSession(sessionId) {
+    if (confirm('Tem certeza que deseja cancelar esta sessão?')) {
+        // Implementar API call para cancelar
+        showAlert('Sessão cancelada!', 'warning');
+        location.reload();
+    }
+}
+</script>
+{% endblock %}

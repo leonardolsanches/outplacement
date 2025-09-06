@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil Profissional - {{ executive.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-user-tie me-2"></i>Diagnóstico e Perfil Profissional</h5>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+            <div class="card-body">
+                <form id="profileForm">
+                    <input type="hidden" name="executive_id" value="{{ executive.id }}">
+                    
+                    <!-- Informações Básicas -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <strong>Nome:</strong> {{ executive.name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Empresa:</strong> {{ executive.company }}
+                        </div>
+                    </div>
+                    
+                    <!-- Competências e Pontos Fortes -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>Principais Competências</strong></label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="competencies" value="lideranca" {% if profile and 'lideranca' in profile.competencies %}checked{% endif %}>
+                                    <label class="form-check-label">Liderança</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="competencies" value="gestao_equipes" {% if profile and 'gestao_equipes' in profile.competencies %}checked{% endif %}>
+                                    <label class="form-check-label">Gestão de Equipes</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="competencies" value="planejamento_estrategico" {% if profile and 'planejamento_estrategico' in profile.competencies %}checked{% endif %}>
+                                    <label class="form-check-label">Planejamento Estratégico</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="competencies" value="gestao_projetos" {% if profile and 'gestao_projetos' in profile.competencies %}checked{% endif %}>
+                                    <label class="form-check-label">Gestão de Projetos</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="competencies" value="comunicacao" {% if profile and 'comunicacao' in profile.competencies %}checked{% endif %}>
+                                    <label class="form-check-label">Comunicação</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="competencies" value="negociacao" {% if profile and 'negociacao' in profile.competencies %}checked{% endif %}>
+                                    <label class="form-check-label">Negociação</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="competencies" value="analise_dados" {% if profile and 'analise_dados' in profile.competencies %}checked{% endif %}>
+                                    <label class="form-check-label">Análise de Dados</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="competencies" value="inovacao" {% if profile and 'inovacao' in profile.competencies %}checked{% endif %}>
+                                    <label class="form-check-label">Inovação</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Objetivos de Carreira -->
+                    <div class="mb-4">
+                        <label for="career_goals" class="form-label"><strong>Objetivos de Carreira</strong></label>
+                        <textarea class="form-control" id="career_goals" name="career_goals" rows="3" placeholder="Descreva seus principais objetivos e metas profissionais...">{% if profile %}{{ profile.career_goals }}{% endif %}</textarea>
+                    </div>
+                    
+                    <!-- Setores de Interesse -->
+                    <div class="mb-4">
+                        <label class="form-label"><strong>Setores de Interesse</strong></label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_industries" value="tecnologia" {% if profile and 'tecnologia' in profile.preferred_industries %}checked{% endif %}>
+                                    <label class="form-check-label">Tecnologia</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_industries" value="financeiro" {% if profile and 'financeiro' in profile.preferred_industries %}checked{% endif %}>
+                                    <label class="form-check-label">Financeiro</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_industries" value="consultoria" {% if profile and 'consultoria' in profile.preferred_industries %}checked{% endif %}>
+                                    <label class="form-check-label">Consultoria</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_industries" value="saude" {% if profile and 'saude' in profile.preferred_industries %}checked{% endif %}>
+                                    <label class="form-check-label">Saúde</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_industries" value="educacao" {% if profile and 'educacao' in profile.preferred_industries %}checked{% endif %}>
+                                    <label class="form-check-label">Educação</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_industries" value="varejo" {% if profile and 'varejo' in profile.preferred_industries %}checked{% endif %}>
+                                    <label class="form-check-label">Varejo</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_industries" value="manufatura" {% if profile and 'manufatura' in profile.preferred_industries %}checked{% endif %}>
+                                    <label class="form-check-label">Manufatura</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_industries" value="energia" {% if profile and 'energia' in profile.preferred_industries %}checked{% endif %}>
+                                    <label class="form-check-label">Energia</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="preferred_industries" value="agronegocio" {% if profile and 'agronegocio' in profile.preferred_industries %}checked{% endif %}>
+                                    <label class="form-check-label">Agronegócio</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Expectativa Salarial -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="salary_expectation" class="form-label"><strong>Expectativa Salarial</strong></label>
+                            <select class="form-select" id="salary_expectation" name="salary_expectation">
+                                <option value="">Selecione uma faixa...</option>
+                                <option value="ate_10k" {% if profile and profile.salary_expectation == 'ate_10k' %}selected{% endif %}>Até R$ 10.000</option>
+                                <option value="10k_20k" {% if profile and profile.salary_expectation == '10k_20k' %}selected{% endif %}>R$ 10.000 - R$ 20.000</option>
+                                <option value="20k_30k" {% if profile and profile.salary_expectation == '20k_30k' %}selected{% endif %}>R$ 20.000 - R$ 30.000</option>
+                                <option value="30k_50k" {% if profile and profile.salary_expectation == '30k_50k' %}selected{% endif %}>R$ 30.000 - R$ 50.000</option>
+                                <option value="acima_50k" {% if profile and profile.salary_expectation == 'acima_50k' %}selected{% endif %}>Acima de R$ 50.000</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="linkedin_profile" class="form-label"><strong>Perfil LinkedIn</strong></label>
+                            <input type="url" class="form-control" id="linkedin_profile" name="linkedin_profile" 
+                                   placeholder="https://linkedin.com/in/seu-perfil" 
+                                   value="{% if profile %}{{ profile.linkedin_profile }}{% endif %}">
+                        </div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Salvar Perfil
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar com Ações -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-tools me-2"></i>Ações</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('schedule_session', executive_id=executive.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-calendar me-2"></i>Agendar Sessão
+                    </a>
+                    <a href="{{ url_for('interview_simulator', executive_id=executive.id) }}" class="btn btn-outline-info">
+                        <i class="fas fa-microphone me-2"></i>Simulador de Entrevistas
+                    </a>
+                    <button class="btn btn-outline-success">
+                        <i class="fas fa-file-alt me-2"></i>Gerar Currículo
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-chart-line me-2"></i>Progresso</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Perfil Completo</small>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: {% if profile %}85{% else %}25{% endif %}%">
+                            {% if profile %}85%{% else %}25%{% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Sessões Realizadas</small>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" style="width: 60%">60%</div>
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <small class="text-muted">Entrevistas Simuladas</small>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" style="width: 40%">40%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {};
+    
+    // Processar campos regulares
+    for (let [key, value] of formData.entries()) {
+        if (key === 'competencies' || key === 'preferred_industries') {
+            if (!data[key]) data[key] = [];
+            data[key].push(value);
+        } else {
+            data[key] = value;
+        }
+    }
+    
+    fetch('/api/profile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Perfil salvo com sucesso!', 'success');
+        } else {
+            showAlert('Erro ao salvar perfil', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao salvar perfil', 'danger');
+    });
+});
+</script>
+{% endblock %}

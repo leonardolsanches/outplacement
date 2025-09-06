@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios e KPIs - Plataforma Outplacement{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-chart-line me-2"></i>Relatórios e Indicadores</h2>
+            <div>
+                <button class="btn btn-outline-primary" onclick="exportReport()">
+                    <i class="fas fa-download me-1"></i>Exportar Dados
+                </button>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs Principais -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total de Executivos</h6>
+                        <h2>{{ kpis.total_executives }}</h2>
+                        <small>+12% vs mês anterior</small>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Taxa de Recolocação</h6>
+                        <h2>{{ "%.1f"|format(kpis.recolocation_rate) }}%</h2>
+                        <small>Meta: ≥ 60%</small>
+                    </div>
+                    <i class="fas fa-chart-line fa-3x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Satisfação Média</h6>
+                        <h2>{{ "%.0f"|format(kpis.avg_satisfaction) }}%</h2>
+                        <small>Meta: ≥ 80%</small>
+                    </div>
+                    <i class="fas fa-smile fa-3x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Sessões do Mês</h6>
+                        <h2>{{ kpis.monthly_sessions }}</h2>
+                        <small>Média: 1 por executivo</small>
+                    </div>
+                    <i class="fas fa-calendar-check fa-3x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Compliance SLA -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-tachometer-alt me-2"></i>Cumprimento de SLA</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6>Tempo de Resposta</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" style="width: {{ kpis.sla_compliance.response_time }}%">
+                                {{ kpis.sla_compliance.response_time }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Meta: Resposta em ≤ 1 dia útil</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Início do Programa</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-info" style="width: {{ kpis.sla_compliance.program_start }}%">
+                                {{ kpis.sla_compliance.program_start }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Meta: Início em ≤ 5 dias úteis</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Sessões Mensais</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-primary" style="width: {{ kpis.sla_compliance.monthly_sessions }}%">
+                                {{ kpis.sla_compliance.monthly_sessions }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Meta: ≥ 1 sessão/mês</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Relatórios Mensais</h6>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" style="width: {{ kpis.sla_compliance.monthly_reports }}%">
+                                {{ kpis.sla_compliance.monthly_reports }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Meta: Envio até 5º dia útil</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos e Análises -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-area me-2"></i>Evolução Mensal</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie me-2"></i>Status dos Executivos</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" width="300" height="300"></canvas>
+                
+                <div class="mt-3">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="badge bg-primary w-100">Ativo</div>
+                            <div>{{ kpis.total_executives - 0 }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="badge bg-success w-100">Recolocado</div>
+                            <div>0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="badge bg-secondary w-100">Suspenso</div>
+                            <div>0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Detalhada -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-table me-2"></i>Relatório Detalhado por Executivo</h5>
+                <div>
+                    <select class="form-select form-select-sm" id="statusFilter">
+                        <option value="">Todos os Status</option>
+                        <option value="active">Ativos</option>
+                        <option value="recolocated">Recolocados</option>
+                        <option value="suspended">Suspensos</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="executivesTable">
+                        <thead>
+                            <tr>
+                                <th>Executivo</th>
+                                <th>Empresa</th>
+                                <th>Início</th>
+                                <th>Sessões</th>
+                                <th>Última Atividade</th>
+                                <th>Status</th>
+                                <th>Progresso</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                    Nenhum executivo cadastrado ainda.<br>
+                                    <small>Adicione executivos pelo dashboard para visualizar os relatórios.</small>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalhes do Executivo -->
+<div class="modal fade" id="executiveDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Executivo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="executiveDetails">
+                    <!-- Conteúdo será carregado dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de Evolução Mensal
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyChart = new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+        datasets: [{
+            label: 'Executivos Ativos',
+            data: [5, 8, 12, 15, 18, {{ kpis.total_executives }}],
+            borderColor: 'rgb(54, 162, 235)',
+            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Recolocações',
+            data: [1, 3, 5, 8, 12, 15],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Gráfico de Status (Donut)
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Ativos', 'Recolocados', 'Suspensos'],
+        datasets: [{
+            data: [{{ kpis.total_executives }}, 0, 0],
+            backgroundColor: [
+                'rgb(54, 162, 235)',
+                'rgb(75, 192, 192)',
+                'rgb(255, 205, 86)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Função para exportar relatório
+function exportReport() {
+    fetch('/api/reports/export')
+        .then(response => response.json())
+        .then(data => {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_outplacement_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showAlert('Relatório exportado com sucesso!', 'success');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Erro ao exportar relatório', 'danger');
+        });
+}
+
+// Filtro de status
+document.getElementById('statusFilter').addEventListener('change', function() {
+    const filterValue = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#executivesTable tbody tr');
+    
+    rows.forEach(row => {
+        if (!filterValue) {
+            row.style.display = '';
+        } else {
+            const statusCell = row.cells[5];
+            if (statusCell && statusCell.textContent.toLowerCase().includes(filterValue)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
+
+// Simular atualização de dados a cada 30 segundos
+setInterval(() => {
+    // Atualizar gráficos com novos dados
+    console.log('Atualizando dados dos relatórios...');
+}, 30000);
+</script>
+{% endblock %}

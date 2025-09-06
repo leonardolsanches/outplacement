@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Plataforma Outplacement{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+            <div class="text-muted">
+                Modo de Acesso Livre
+                <span class="badge bg-success">Administrador</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Executivos Ativos</h6>
+                        <h3>{{ executives|length }}</h3>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Sessões do Mês</h6>
+                        <h3>{{ sessions|length }}</h3>
+                    </div>
+                    <i class="fas fa-calendar-check fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Taxa Recolocação</h6>
+                        <h3>75%</h3>
+                    </div>
+                    <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Satisfação</h6>
+                        <h3>85%</h3>
+                    </div>
+                    <i class="fas fa-smile fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Left Column -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-users me-2"></i>Executivos em Atendimento</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExecutiveModal">
+                    <i class="fas fa-plus me-1"></i>Adicionar
+                </button>
+            </div>
+            <div class="card-body">
+                {% if executives %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Empresa</th>
+                                <th>Status</th>
+                                <th>Início</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exec in executives %}
+                            <tr>
+                                <td>{{ exec.name }}</td>
+                                <td>{{ exec.company }}</td>
+                                <td>
+                                    <span class="badge bg-success">{{ exec.status.title() }}</span>
+                                </td>
+                                <td>{{ exec.start_date[:10] }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-calendar"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Nenhum executivo em atendimento no momento.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-calendar me-2"></i>Próximas Sessões</h5>
+            </div>
+            <div class="card-body">
+                {% if sessions %}
+                    {% for session in sessions[:5] %}
+                    <div class="d-flex mb-3 p-2 border rounded">
+                        <div class="me-3">
+                            <i class="fas fa-calendar-day text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted">{{ session.date }}</small>
+                            <div>{{ session.executive_name }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-calendar fa-2x text-muted mb-2"></i>
+                    <p class="text-muted small">Nenhuma sessão agendada</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie me-2"></i>Indicadores SLA</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Tempo de Resposta</small>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: 95%">95%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Início em 5 dias</small>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" style="width: 88%">88%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Sessões Mensais</small>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" style="width: 92%">92%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar Executivo -->
+<div class="modal fade" id="addExecutiveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Executivo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addExecutiveForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Telefone</label>
+                        <input type="text" class="form-control" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Empresa</label>
+                        <input type="text" class="form-control" name="company" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cargo</label>
+                        <input type="text" class="form-control" name="position" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addExecutive()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addExecutive() {
+    const form = document.getElementById('addExecutiveForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/api/executives', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erro ao adicionar executivo');
+        }
+    })
+    .catch(error => {
+        alert('Erro ao adicionar executivo');
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}

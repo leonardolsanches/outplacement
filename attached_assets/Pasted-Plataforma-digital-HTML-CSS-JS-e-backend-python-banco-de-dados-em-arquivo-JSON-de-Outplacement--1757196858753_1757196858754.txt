@@ -1,0 +1,61 @@
+Plataforma digital (HTML, CSS, JS e backend python, banco de dados em arquivo JSON) de Outplacement para assistencia a executivos em sua nova jornada de transição de carreira, oferecendo recursos para acompanhamento individual, conteúdos exclusivos e interação com os participantes.
+
+Definição clara de prazos para cada executivo assistido, canais de atendimento, indicadores de desempenho dos executivos e performance da metologia aplicada para Outplacement.
+
+O foco é auxiliar executivos em sua revisão carreira e transição, resgatando suas realizações, motivações e interesses pessoais para sua recolocação no mercado de trabalho.
+
+a plataforma proverá atendimento individualizado
+Diagnóstico de perfil profissional e mapeamento de competências.
+Revisão e elaboração de currículo e perfil em redes profissionais (ex: LinkedIn).
+Treinamento para entrevistas e dinâmicas de grupo.
+Orientação para networking e marketing pessoal.
+Acesso a vagas e oportunidades de mercado.
+Relatórios de acompanhamento para a contratante de todos os profissionais usuários do serviço
+
+a plataforma fará o acompanhamento com suporte a calendário:
+
+2.1. Planejamento e Acolhimento
+Reunião inicial com RH da contratante.
+Acolhimento emocional do profissional desligado.
+Apresentação do programa e definição de cronograma.
+
+2.2. Diagnóstico e Planejamento de Carreira
+Avaliação de perfil comportamental e técnico.
+Identificação de objetivos profissionais.
+Elaboração de plano de ação individual.
+
+2.3. Preparação para o Mercado
+Construção ou revisão de currículo.
+Otimização de perfil em redes sociais.
+Simulações de entrevistas e dinâmicas.
+Estratégias de abordagem a recrutadores.
+
+2.4. Acompanhamento e Recolocação
+Monitoramento de oportunidades.
+Apoio contínuo por consultores especializados.
+Relatórios mensais de progresso, para o participante e Contratante.
+
+A ferramentas disponibilizará simuladores de entrevistas, materiais de apoio, acesso a vagas e rede de contatos.
+
+Os seguintes KPI deverão ser monitorados e serão relatórios de cumprimento de SLA:
+
+Tempo de resposta ao executivo:
+Contato respondido em até 1 dia útil
+
+Início do atendimento:
+Programa iniciado em até 5 dias úteis após solicitação formal.
+
+Frequência mínima de sessões:
+Mínimo de 1 sessões individuais por mês por executivo.
+
+Relatórios mensais:
+Envio até o 5º dia útil de cada mês, com status, ações e próximos passos.
+
+Taxa de recolocação:
+Mínimo de 60% dos executivos recolocados em até 12 meses.
+
+Satisfação do executivo
+Índice de satisfação ≥ 80% ao final do programa.
+
+
+

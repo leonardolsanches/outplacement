@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}Simulador de Entrevistas - {{ executive.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-microphone me-2"></i>Simulador de Entrevistas</h5>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Executivo: {{ executive.name }}</h6>
+                    <p class="text-muted">{{ executive.company }} - {{ executive.position }}</p>
+                </div>
+                
+                <!-- Seleção do Tipo de Entrevista -->
+                <div class="mb-4">
+                    <label class="form-label"><strong>Tipo de Entrevista</strong></label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card interview-type-card" onclick="selectInterviewType('behavioral')">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                    <h6>Comportamental</h6>
+                                    <small class="text-muted">Situações e experiências passadas</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card interview-type-card" onclick="selectInterviewType('technical')">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cogs fa-2x text-success mb-2"></i>
+                                    <h6>Técnica</h6>
+                                    <small class="text-muted">Competências e conhecimentos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card interview-type-card" onclick="selectInterviewType('leadership')">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-crown fa-2x text-warning mb-2"></i>
+                                    <h6>Liderança</h6>
+                                    <small class="text-muted">Gestão e tomada de decisão</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Área da Pergunta -->
+                <div id="questionArea" style="display: none;">
+                    <div class="alert alert-info">
+                        <strong>Instruções:</strong> Responda às perguntas como se estivesse em uma entrevista real. 
+                        Seja específico e use exemplos concretos da sua experiência profissional.
+                    </div>
+                    
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 id="currentQuestion" class="mb-3"></h5>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Pergunta <span id="questionNumber">1</span> de <span id="totalQuestions">4</span></span>
+                                <div>
+                                    <button class="btn btn-outline-secondary" onclick="previousQuestion()" id="prevBtn" disabled>
+                                        <i class="fas fa-chevron-left"></i> Anterior
+                                    </button>
+                                    <button class="btn btn-primary" onclick="nextQuestion()" id="nextBtn">
+                                        Próxima <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Área de Resposta -->
+                    <div class="mt-3">
+                        <label class="form-label"><strong>Sua Resposta</strong></label>
+                        <textarea id="answerArea" class="form-control" rows="6" 
+                                  placeholder="Digite sua resposta aqui... Lembre-se de usar exemplos específicos e quantificar resultados quando possível."></textarea>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                Dica: Use a estrutura STAR (Situação, Tarefa, Ação, Resultado) para organizar suas respostas.
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Timer -->
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-clock text-primary me-1"></i>
+                                <span>Tempo: <strong id="timer">00:00</strong></span>
+                            </div>
+                            <div>
+                                <button class="btn btn-outline-primary btn-sm" onclick="startTimer()" id="timerBtn">
+                                    <i class="fas fa-play"></i> Iniciar Timer
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="resetTimer()">
+                                    <i class="fas fa-redo"></i> Resetar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="progress mt-2" style="height: 5px;">
+                            <div id="timerProgress" class="progress-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resultados -->
+                <div id="resultsArea" style="display: none;">
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-check-circle me-2"></i>Simulação Concluída!</h5>
+                        <p class="mb-0">Parabéns por completar a simulação de entrevista. Revise suas respostas e continue praticando.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h6><i class="fas fa-chart-bar me-2"></i>Resumo da Sessão</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Perguntas Respondidas:</strong> <span id="answeredCount">0</span>/4
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Tempo Total:</strong> <span id="totalTime">00:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <button class="btn btn-primary" onclick="restartSimulation()">
+                            <i class="fas fa-redo me-2"></i>Nova Simulação
+                        </button>
+                        <button class="btn btn-outline-success" onclick="saveResults()">
+                            <i class="fas fa-save me-2"></i>Salvar Resultados
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar com Dicas -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-lightbulb me-2"></i>Dicas para Entrevistas</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-primary">Estrutura STAR</h6>
+                    <ul class="small">
+                        <li><strong>S</strong>ituação: Contexto do exemplo</li>
+                        <li><strong>T</strong>arefa: Seu papel específico</li>
+                        <li><strong>A</strong>ção: O que você fez</li>
+                        <li><strong>R</strong>esultado: Impacto gerado</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-success">Dicas Gerais</h6>
+                    <ul class="small">
+                        <li>Seja específico e use números</li>
+                        <li>Foque em suas contribuições</li>
+                        <li>Mostre aprendizados de falhas</li>
+                        <li>Demonstre crescimento e evolução</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="text-info">Linguagem Corporal</h6>
+                    <ul class="small">
+                        <li>Mantenha contato visual</li>
+                        <li>Postura ereta e confiante</li>
+                        <li>Gesticule de forma natural</li>
+                        <li>Sorria quando apropriado</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-history me-2"></i>Histórico</h6>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">Simulações anteriores aparecerão aqui</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentInterviewType = null;
+let currentQuestionIndex = 0;
+let questions = [];
+let answers = [];
+let timerInterval = null;
+let startTime = null;
+let sessionStartTime = null;
+
+const questionsByType = {
+    'behavioral': {{ questions.behavioral | tojson }},
+    'technical': {{ questions.technical | tojson }},
+    'leadership': {{ questions.leadership | tojson }}
+};
+
+// Estilo para cards selecionáveis
+const style = document.createElement('style');
+style.textContent = `
+    .interview-type-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    .interview-type-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .interview-type-card.selected {
+        border-color: #007bff;
+        background-color: #f8f9ff;
+    }
+`;
+document.head.appendChild(style);
+
+function selectInterviewType(type) {
+    currentInterviewType = type;
+    questions = questionsByType[type];
+    currentQuestionIndex = 0;
+    answers = new Array(questions.length).fill('');
+    
+    // Atualizar visual
+    document.querySelectorAll('.interview-type-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    event.currentTarget.classList.add('selected');
+    
+    // Mostrar área de perguntas
+    document.getElementById('questionArea').style.display = 'block';
+    document.getElementById('resultsArea').style.display = 'none';
+    
+    // Configurar primeira pergunta
+    updateQuestion();
+    sessionStartTime = new Date();
+}
+
+function updateQuestion() {
+    document.getElementById('currentQuestion').textContent = questions[currentQuestionIndex];
+    document.getElementById('questionNumber').textContent = currentQuestionIndex + 1;
+    document.getElementById('totalQuestions').textContent = questions.length;
+    document.getElementById('answerArea').value = answers[currentQuestionIndex] || '';
+    
+    // Atualizar botões
+    document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+    document.getElementById('nextBtn').textContent = currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Próxima';
+    document.getElementById('nextBtn').innerHTML = currentQuestionIndex === questions.length - 1 ? 
+        'Finalizar <i class="fas fa-check"></i>' : 'Próxima <i class="fas fa-chevron-right"></i>';
+}
+
+function previousQuestion() {
+    if (currentQuestionIndex > 0) {
+        answers[currentQuestionIndex] = document.getElementById('answerArea').value;
+        currentQuestionIndex--;
+        updateQuestion();
+        resetTimer();
+    }
+}
+
+function nextQuestion() {
+    answers[currentQuestionIndex] = document.getElementById('answerArea').value;
+    
+    if (currentQuestionIndex === questions.length - 1) {
+        // Finalizar simulação
+        finishSimulation();
+    } else {
+        currentQuestionIndex++;
+        updateQuestion();
+        resetTimer();
+    }
+}
+
+function finishSimulation() {
+    document.getElementById('questionArea').style.display = 'none';
+    document.getElementById('resultsArea').style.display = 'block';
+    
+    const answeredCount = answers.filter(answer => answer.trim().length > 0).length;
+    document.getElementById('answeredCount').textContent = answeredCount;
+    
+    if (sessionStartTime) {
+        const totalTime = Math.floor((new Date() - sessionStartTime) / 1000);
+        const minutes = Math.floor(totalTime / 60);
+        const seconds = totalTime % 60;
+        document.getElementById('totalTime').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+function restartSimulation() {
+    document.getElementById('questionArea').style.display = 'none';
+    document.getElementById('resultsArea').style.display = 'none';
+    currentInterviewType = null;
+    currentQuestionIndex = 0;
+    answers = [];
+    
+    document.querySelectorAll('.interview-type-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    resetTimer();
+}
+
+// Timer functions
+function startTimer() {
+    if (!timerInterval) {
+        startTime = new Date();
+        timerInterval = setInterval(updateTimer, 1000);
+        document.getElementById('timerBtn').innerHTML = '<i class="fas fa-pause"></i> Pausar Timer';
+        document.getElementById('timerBtn').onclick = pauseTimer;
+    }
+}
+
+function pauseTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        document.getElementById('timerBtn').innerHTML = '<i class="fas fa-play"></i> Continuar Timer';
+        document.getElementById('timerBtn').onclick = startTimer;
+    }
+}
+
+function resetTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    document.getElementById('timer').textContent = '00:00';
+    document.getElementById('timerProgress').style.width = '0%';
+    document.getElementById('timerBtn').innerHTML = '<i class="fas fa-play"></i> Iniciar Timer';
+    document.getElementById('timerBtn').onclick = startTimer;
+    startTime = null;
+}
+
+function updateTimer() {
+    if (startTime) {
+        const elapsed = Math.floor((new Date() - startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        
+        document.getElementById('timer').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Atualizar barra de progresso (máximo 5 minutos)
+        const progressPercent = Math.min((elapsed / 300) * 100, 100);
+        document.getElementById('timerProgress').style.width = progressPercent + '%';
+        
+        if (progressPercent >= 100) {
+            document.getElementById('timerProgress').classList.remove('progress-bar');
+            document.getElementById('timerProgress').classList.add('progress-bar', 'bg-warning');
+        }
+    }
+}
+
+function saveResults() {
+    const resultData = {
+        executive_id: '{{ executive.id }}',
+        interview_type: currentInterviewType,
+        questions: questions,
+        answers: answers,
+        completed_at: new Date().toISOString()
+    };
+    
+    // Simular salvamento
+    showAlert('Resultados salvos com sucesso!', 'success');
+}
+</script>
+{% endblock %}

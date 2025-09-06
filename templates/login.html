@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Plataforma Outplacement{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4><i class="fas fa-sign-in-alt me-2"></i>Entrar na Plataforma</h4>
+            </div>
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST" id="loginForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Usuário</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ request.form.username if request.form.username }}" required autocomplete="username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="loginBtn">
+                        <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                    </button>
+                </form>
+                
+                <script>
+                document.getElementById('loginForm').addEventListener('submit', function(e) {
+                    const btn = document.getElementById('loginBtn');
+                    const form = this;
+                    
+                    // Verificar se os campos estão preenchidos
+                    const username = document.getElementById('username').value.trim();
+                    const password = document.getElementById('password').value;
+                    
+                    console.log('DEBUG: Tentativa de login com usuário:', username);
+                    
+                    if (!username || !password) {
+                        e.preventDefault();
+                        alert('Por favor, preencha todos os campos');
+                        return;
+                    }
+                    
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processando...';
+                    
+                    console.log('DEBUG: Formulário enviado');
+                    
+                    // Timeout para reabilitar o botão em caso de problema
+                    setTimeout(() => {
+                        if (btn.disabled) {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Entrar';
+                            console.log('DEBUG: Botão reabilitado por timeout');
+                        }
+                    }, 10000);
+                });
+                
+                // Debug quando a página carrega
+                window.addEventListener('load', function() {
+                    console.log('DEBUG: Página de login carregada');
+                    console.log('DEBUG: URL atual:', window.location.href);
+                });
+                </script>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <p class="mb-0">Não tem uma conta? 
+                        <a href="{{ url_for('register') }}">Cadastre-se aqui</a>
+                    </p>
+                </div>
+                
+                <div class="mt-3 p-3 bg-light rounded">
+                    <small class="text-muted">
+                        <strong>Conta de demonstração:</strong><br>
+                        Usuário: admin<br>
+                        Senha: admin123
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
