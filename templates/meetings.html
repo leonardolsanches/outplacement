@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Encontros entre Executivos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-calendar-alt me-2"></i>Encontros entre Executivos</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMeetingModal">
+                <i class="fas fa-plus me-1"></i>Agendar Encontro
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Calendário Visual -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-calendar me-2"></i>Próximos Encontros</h5>
+            </div>
+            <div class="card-body">
+                <div id="meetingsCalendar">
+                    {% if meetings %}
+                        <div class="row">
+                            {% for meeting in meetings %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card {% if meeting.status == 'scheduled' %}border-primary{% elif meeting.status == 'completed' %}border-success{% else %}border-secondary{% endif %}">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ meeting.title }}</h6>
+                                        <span class="badge bg-{% if meeting.status == 'scheduled' %}primary{% elif meeting.status == 'completed' %}success{% else %}secondary{% endif %}">
+                                            {{ meeting.status.title() }}
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-2">
+                                            <i class="fas fa-calendar me-2"></i>{{ meeting.date }}
+                                        </div>
+                                        <div class="mb-2">
+                                            <i class="fas fa-clock me-2"></i>{{ meeting.time }} ({{ meeting.duration }}min)
+                                        </div>
+                                        {% if meeting.location %}
+                                        <div class="mb-2">
+                                            <i class="fas fa-map-marker-alt me-2"></i>{{ meeting.location }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="mb-2">
+                                            <i class="fas fa-tag me-2"></i>{{ meeting.type.replace('_', ' ').title() }}
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted">Participantes: {{ meeting.participants|length }}</small>
+                                        </div>
+                                        {% if meeting.description %}
+                                        <p class="small text-muted">{{ meeting.description[:80] }}{% if meeting.description|length > 80 %}...{% endif %}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer">
+                                        {% if meeting.status == 'scheduled' %}
+                                        <button class="btn btn-sm btn-success me-1" onclick="completeMeeting('{{ meeting.id }}')">
+                                            <i class="fas fa-check"></i> Concluir
+                                        </button>
+                                        <button class="btn btn-sm btn-warning me-1" onclick="editMeeting('{{ meeting.id }}')">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="cancelMeeting('{{ meeting.id }}')">
+                                            <i class="fas fa-times"></i> Cancelar
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="viewMeetingDetails('{{ meeting.id }}')">
+                                            <i class="fas fa-eye"></i> Ver Detalhes
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+                            <h5>Nenhum encontro agendado</h5>
+                            <p class="text-muted">Organize encontros para networking e troca de experiências entre executivos.</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMeetingModal">
+                                <i class="fas fa-plus me-1"></i>Agendar Primeiro Encontro
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tipos de Encontros -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-handshake fa-3x text-primary mb-3"></i>
+                <h5>Networking</h5>
+                <p class="text-muted">Encontros informais para expandir a rede de contatos</p>
+                <button class="btn btn-outline-primary" onclick="quickSchedule('networking')">
+                    Agendar Networking
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-graduation-cap fa-3x text-success mb-3"></i>
+                <h5>Grupo de Estudos</h5>
+                <p class="text-muted">Sessões de aprendizagem e desenvolvimento conjunto</p>
+                <button class="btn btn-outline-success" onclick="quickSchedule('study_group')">
+                    Criar Grupo
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-tools fa-3x text-warning mb-3"></i>
+                <h5>Workshop</h5>
+                <p class="text-muted">Workshops práticos sobre temas específicos</p>
+                <button class="btn btn-outline-warning" onclick="quickSchedule('workshop')">
+                    Organizar Workshop
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agendar Encontro -->
+<div class="modal fade" id="addMeetingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agendar Novo Encontro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addMeetingForm">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Título do Encontro *</label>
+                            <input type="text" class="form-control" name="title" required placeholder="Ex: Networking em Tecnologia">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tipo *</label>
+                            <select class="form-select" name="type" required>
+                                <option value="">Selecione...</option>
+                                <option value="networking">Networking</option>
+                                <option value="study_group">Grupo de Estudos</option>
+                                <option value="workshop">Workshop</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Data *</label>
+                            <input type="date" class="form-control" name="date" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Horário *</label>
+                            <input type="time" class="form-control" name="time" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Duração (min)</label>
+                            <select class="form-select" name="duration">
+                                <option value="60">1 hora</option>
+                                <option value="90">1h 30min</option>
+                                <option value="120">2 horas</option>
+                                <option value="180">3 horas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Local</label>
+                        <input type="text" class="form-control" name="location" placeholder="Online, Endereço físico, etc.">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Participantes</label>
+                        <div class="row">
+                            {% for executive in executives %}
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="participants" value="{{ executive.id }}">
+                                    <label class="form-check-label">
+                                        {{ executive.name }} - {{ executive.company }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Objetivo do encontro, agenda, materiais necessários..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addMeeting()">Agendar Encontro</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Definir data mínima como hoje
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="date"]').min = today;
+});
+
+function addMeeting() {
+    const form = document.getElementById('addMeetingForm');
+    const formData = new FormData(form);
+    
+    // Processar participantes selecionados
+    const participants = [];
+    const checkboxes = form.querySelectorAll('input[name="participants"]:checked');
+    checkboxes.forEach(checkbox => {
+        participants.push(checkbox.value);
+    });
+    
+    const data = {
+        title: formData.get('title'),
+        type: formData.get('type'),
+        date: formData.get('date'),
+        time: formData.get('time'),
+        duration: parseInt(formData.get('duration')),
+        location: formData.get('location'),
+        description: formData.get('description'),
+        participants: participants,
+        organizer_id: 'admin'
+    };
+    
+    fetch('/api/meetings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Encontro agendado com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao agendar encontro', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao agendar encontro', 'danger');
+    });
+}
+
+function quickSchedule(type) {
+    // Preencher o tipo automaticamente e abrir modal
+    document.querySelector('select[name="type"]').value = type;
+    const modal = new bootstrap.Modal(document.getElementById('addMeetingModal'));
+    modal.show();
+}
+
+function completeMeeting(meetingId) {
+    if (confirm('Marcar este encontro como concluído?')) {
+        showAlert('Encontro marcado como concluído!', 'success');
+        setTimeout(() => location.reload(), 1500);
+    }
+}
+
+function editMeeting(meetingId) {
+    showAlert('Funcionalidade de edição em desenvolvimento', 'info');
+}
+
+function cancelMeeting(meetingId) {
+    if (confirm('Tem certeza que deseja cancelar este encontro?')) {
+        showAlert('Encontro cancelado!', 'warning');
+        setTimeout(() => location.reload(), 1500);
+    }
+}
+
+function viewMeetingDetails(meetingId) {
+    showAlert('Detalhes do encontro em desenvolvimento', 'info');
+}
+</script>
+{% endblock %}

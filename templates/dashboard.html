@@ -105,12 +105,23 @@
                                 </td>
                                 <td>{{ exec.start_date[:10] }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-info">
-                                        <i class="fas fa-calendar"></i>
-                                    </button>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('executive_profile', executive_id=exec.id) }}" class="btn btn-sm btn-outline-primary" title="Ver Perfil">
+                                            <i class="fas fa-user"></i>
+                                        </a>
+                                        <a href="{{ url_for('schedule_session', executive_id=exec.id) }}" class="btn btn-sm btn-outline-info" title="Agendar Sessão">
+                                            <i class="fas fa-calendar"></i>
+                                        </a>
+                                        <a href="{{ url_for('executive_documents', executive_id=exec.id) }}" class="btn btn-sm btn-outline-success" title="Documentos">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                        <a href="{{ url_for('executive_skills', executive_id=exec.id) }}" class="btn btn-sm btn-outline-warning" title="Habilidades">
+                                            <i class="fas fa-star"></i>
+                                        </a>
+                                        <a href="{{ url_for('coaching_communication', executive_id=exec.id) }}" class="btn btn-sm btn-outline-secondary" title="Chat Coach">
+                                            <i class="fas fa-comments"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}

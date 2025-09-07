@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Networking e Contatos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-handshake me-2"></i>Networking e Contatos</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
+                <i class="fas fa-plus me-1"></i>Adicionar Contato
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <select class="form-select" id="industryFilter">
+            <option value="">Todos os Setores</option>
+            <option value="tecnologia">Tecnologia</option>
+            <option value="financeiro">Financeiro</option>
+            <option value="consultoria">Consultoria</option>
+            <option value="saude">Saúde</option>
+            <option value="educacao">Educação</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="levelFilter">
+            <option value="">Nível de Conexão</option>
+            <option value="novo">Novo Contato</option>
+            <option value="conhecido">Conhecido</option>
+            <option value="proximo">Próximo</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <input type="text" class="form-control" id="searchFilter" placeholder="Buscar por nome...">
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-outline-secondary" onclick="clearFilters()">
+            <i class="fas fa-times me-1"></i>Limpar Filtros
+        </button>
+    </div>
+</div>
+
+<!-- Lista de Contatos -->
+<div class="row" id="contactsList">
+    {% if contacts %}
+        {% for contact in contacts %}
+        <div class="col-md-6 mb-3 contact-card" 
+             data-industry="{{ contact.industry }}" 
+             data-level="{{ contact.connection_level }}"
+             data-name="{{ contact.name.lower() }}">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title">{{ contact.name }}</h6>
+                            <p class="card-text text-muted small">
+                                {{ contact.position }} - {{ contact.company }}
+                            </p>
+                            <div class="mb-2">
+                                <span class="badge bg-primary me-1">{{ contact.industry.title() }}</span>
+                                <span class="badge bg-{% if contact.connection_level == 'novo' %}secondary{% elif contact.connection_level == 'conhecido' %}warning{% else %}success{% endif %}">
+                                    {{ contact.connection_level.title() }}
+                                </span>
+                            </div>
+                            {% if contact.location %}
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ contact.location }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="mailto:{{ contact.email }}">
+                                    <i class="fas fa-envelope me-1"></i>Enviar E-mail
+                                </a></li>
+                                {% if contact.linkedin %}
+                                <li><a class="dropdown-item" href="{{ contact.linkedin }}" target="_blank">
+                                    <i class="fab fa-linkedin me-1"></i>Ver LinkedIn
+                                </a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="#" onclick="editContact('{{ contact.id }}')">
+                                    <i class="fas fa-edit me-1"></i>Editar
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">E-mail:</small><br>
+                                <small>{{ contact.email }}</small>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Telefone:</small><br>
+                                <small>{{ contact.phone or 'Não informado' }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if contact.notes %}
+                    <div class="mt-2">
+                        <small class="text-muted">Notas:</small><br>
+                        <small>{{ contact.notes[:100] }}{% if contact.notes|length > 100 %}...{% endif %}</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-primary" onclick="recordContact('{{ contact.id }}')">
+                            <i class="fas fa-phone me-1"></i>Registrar Contato
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="scheduleMeeting('{{ contact.id }}')">
+                            <i class="fas fa-calendar me-1"></i>Agendar Encontro
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-address-book fa-4x text-muted mb-3"></i>
+                <h4>Nenhum contato cadastrado</h4>
+                <p class="text-muted">Comece construindo sua rede de networking adicionando seus contatos profissionais.</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
+                    <i class="fas fa-plus me-1"></i>Adicionar Primeiro Contato
+                </button>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal para Adicionar Contato -->
+<div class="modal fade" id="addContactModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Novo Contato</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addContactForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nome *</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Empresa</label>
+                            <input type="text" class="form-control" name="company">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cargo</label>
+                            <input type="text" class="form-control" name="position">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">E-mail *</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-control" name="phone">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">LinkedIn</label>
+                            <input type="url" class="form-control" name="linkedin" placeholder="https://linkedin.com/in/...">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Setor</label>
+                            <select class="form-select" name="industry">
+                                <option value="">Selecione...</option>
+                                <option value="tecnologia">Tecnologia</option>
+                                <option value="financeiro">Financeiro</option>
+                                <option value="consultoria">Consultoria</option>
+                                <option value="saude">Saúde</option>
+                                <option value="educacao">Educação</option>
+                                <option value="varejo">Varejo</option>
+                                <option value="manufatura">Manufatura</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nível de Conexão</label>
+                            <select class="form-select" name="connection_level">
+                                <option value="novo">Novo Contato</option>
+                                <option value="conhecido">Conhecido</option>
+                                <option value="proximo">Próximo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Localização</label>
+                            <input type="text" class="form-control" name="location" placeholder="Cidade, Estado">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Último Contato</label>
+                            <input type="date" class="form-control" name="last_contact">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-control" name="notes" rows="3" placeholder="Como se conheceram, interesses em comum, etc."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addContact()">Adicionar Contato</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Adicionar contato
+function addContact() {
+    const form = document.getElementById('addContactForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/api/networking', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Contato adicionado com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao adicionar contato', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao adicionar contato', 'danger');
+    });
+}
+
+// Filtros
+document.getElementById('industryFilter').addEventListener('change', applyFilters);
+document.getElementById('levelFilter').addEventListener('change', applyFilters);
+document.getElementById('searchFilter').addEventListener('input', applyFilters);
+
+function applyFilters() {
+    const industryFilter = document.getElementById('industryFilter').value;
+    const levelFilter = document.getElementById('levelFilter').value;
+    const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+    
+    const cards = document.querySelectorAll('.contact-card');
+    
+    cards.forEach(card => {
+        const industry = card.dataset.industry;
+        const level = card.dataset.level;
+        const name = card.dataset.name;
+        
+        let show = true;
+        
+        if (industryFilter && industry !== industryFilter) show = false;
+        if (levelFilter && level !== levelFilter) show = false;
+        if (searchFilter && !name.includes(searchFilter)) show = false;
+        
+        card.style.display = show ? 'block' : 'none';
+    });
+}
+
+function clearFilters() {
+    document.getElementById('industryFilter').value = '';
+    document.getElementById('levelFilter').value = '';
+    document.getElementById('searchFilter').value = '';
+    applyFilters();
+}
+
+function recordContact(contactId) {
+    // Implementar registro de contato
+    showAlert('Contato registrado!', 'success');
+}
+
+function scheduleMeeting(contactId) {
+    // Redirecionar para agendamento
+    window.location.href = '/meetings';
+}
+</script>
+{% endblock %}

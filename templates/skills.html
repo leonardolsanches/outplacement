@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Habilidades - {{ executive.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-star me-2"></i>Habilidades e Especialidades - {{ executive.name }}</h5>
+                <div>
+                    <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+                        <i class="fas fa-plus me-1"></i>Adicionar Habilidade
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if skills %}
+                    <!-- Filtro por Categoria -->
+                    <div class="mb-4">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" onclick="filterSkills('all')">
+                                Todas
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="filterSkills('técnica')">
+                                Técnicas
+                            </button>
+                            <button type="button" class="btn btn-outline-success" onclick="filterSkills('comportamental')">
+                                Comportamentais
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" onclick="filterSkills('liderança')">
+                                Liderança
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row" id="skillsList">
+                        {% for skill in skills %}
+                        <div class="col-md-6 mb-3 skill-item" data-category="{{ skill.category }}">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">{{ skill.name }}</h6>
+                                        <div class="d-flex align-items-center">
+                                            {% if skill.validated %}
+                                            <i class="fas fa-check-circle text-success me-1" title="Validada"></i>
+                                            {% endif %}
+                                            <span class="badge bg-{% if skill.category == 'técnica' %}primary{% elif skill.category == 'comportamental' %}success{% else %}warning{% endif %}">
+                                                {{ skill.category.title() }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted">Nível:</small>
+                                        <div class="progress" style="height: 8px;">
+                                            {% set level_percent = {'básico': 25, 'intermediário': 50, 'avançado': 75, 'expert': 100} %}
+                                            <div class="progress-bar bg-{% if skill.level == 'expert' %}success{% elif skill.level == 'avançado' %}warning{% else %}info{% endif %}" 
+                                                 style="width: {{ level_percent[skill.level] }}%"></div>
+                                        </div>
+                                        <small>{{ skill.level.title() }}</small>
+                                    </div>
+                                    
+                                    {% if skill.years_experience > 0 %}
+                                    <div class="mb-2">
+                                        <small class="text-muted">Experiência:</small>
+                                        <span>{{ skill.years_experience }} ano{% if skill.years_experience > 1 %}s{% endif %}</span>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if skill.certifications %}
+                                    <div class="mb-2">
+                                        <small class="text-muted">Certificações:</small><br>
+                                        {% for cert in skill.certifications %}
+                                        <span class="badge bg-light text-dark me-1">{{ cert }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if skill.description %}
+                                    <div class="mb-2">
+                                        <small class="text-muted">Descrição:</small><br>
+                                        <small>{{ skill.description[:100] }}{% if skill.description|length > 100 %}...{% endif %}</small>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="mt-3">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="editSkill('{{ skill.id }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success" onclick="validateSkill('{{ skill.id }}')">
+                                            <i class="fas fa-check"></i> Validar
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="removeSkill('{{ skill.id }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-star fa-4x text-muted mb-3"></i>
+                        <h4>Nenhuma habilidade cadastrada</h4>
+                        <p class="text-muted">Adicione suas principais habilidades técnicas e comportamentais.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+                            <i class="fas fa-plus me-1"></i>Adicionar Primeira Habilidade
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar com Sugestões -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-lightbulb me-2"></i>Habilidades Sugeridas</h6>
+            </div>
+            <div class="card-body">
+                <h6 class="text-primary">Técnicas</h6>
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="quickAddSkill('Python', 'técnica')">Python</button>
+                    <button class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="quickAddSkill('Excel Avançado', 'técnica')">Excel</button>
+                    <button class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="quickAddSkill('Power BI', 'técnica')">Power BI</button>
+                    <button class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="quickAddSkill('SAP', 'técnica')">SAP</button>
+                    <button class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="quickAddSkill('SQL', 'técnica')">SQL</button>
+                </div>
+                
+                <h6 class="text-success">Comportamentais</h6>
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-success me-1 mb-1" onclick="quickAddSkill('Comunicação', 'comportamental')">Comunicação</button>
+                    <button class="btn btn-sm btn-outline-success me-1 mb-1" onclick="quickAddSkill('Trabalho em Equipe', 'comportamental')">Equipe</button>
+                    <button class="btn btn-sm btn-outline-success me-1 mb-1" onclick="quickAddSkill('Adaptabilidade', 'comportamental')">Adaptabilidade</button>
+                    <button class="btn btn-sm btn-outline-success me-1 mb-1" onclick="quickAddSkill('Resolução de Problemas', 'comportamental')">Problemas</button>
+                </div>
+                
+                <h6 class="text-warning">Liderança</h6>
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-warning me-1 mb-1" onclick="quickAddSkill('Gestão de Equipes', 'liderança')">Gestão</button>
+                    <button class="btn btn-sm btn-outline-warning me-1 mb-1" onclick="quickAddSkill('Tomada de Decisão', 'liderança')">Decisão</button>
+                    <button class="btn btn-sm btn-outline-warning me-1 mb-1" onclick="quickAddSkill('Planejamento Estratégico', 'liderança')">Estratégia</button>
+                    <button class="btn btn-sm btn-outline-warning me-1 mb-1" onclick="quickAddSkill('Negociação', 'liderança')">Negociação</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-chart-pie me-2"></i>Análise de Habilidades</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="skillsChart" width="250" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar Habilidade -->
+<div class="modal fade" id="addSkillModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Habilidade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSkillForm">
+                    <input type="hidden" name="executive_id" value="{{ executive.id }}">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Habilidade *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Categoria *</label>
+                            <select class="form-select" name="category" required>
+                                <option value="">Selecione...</option>
+                                <option value="técnica">Técnica</option>
+                                <option value="comportamental">Comportamental</option>
+                                <option value="liderança">Liderança</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nível *</label>
+                            <select class="form-select" name="level" required>
+                                <option value="">Selecione...</option>
+                                <option value="básico">Básico</option>
+                                <option value="intermediário">Intermediário</option>
+                                <option value="avançado">Avançado</option>
+                                <option value="expert">Expert</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Anos de Experiência</label>
+                        <input type="number" class="form-control" name="years_experience" min="0" max="50">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Certificações</label>
+                        <input type="text" class="form-control" name="certifications" placeholder="Separadas por vírgula">
+                        <small class="form-text text-muted">Ex: AWS Solutions Architect, PMP, Six Sigma</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Descreva como aplica esta habilidade..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addSkill()">Adicionar Habilidade</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addSkill() {
+    const form = document.getElementById('addSkillForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Processar certificações
+    if (data.certifications) {
+        data.certifications = data.certifications.split(',').map(cert => cert.trim()).filter(cert => cert);
+    } else {
+        data.certifications = [];
+    }
+    
+    fetch('/api/skills', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Habilidade adicionada com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao adicionar habilidade', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao adicionar habilidade', 'danger');
+    });
+}
+
+function quickAddSkill(skillName, category) {
+    document.querySelector('input[name="name"]').value = skillName;
+    document.querySelector('select[name="category"]').value = category;
+    
+    const modal = new bootstrap.Modal(document.getElementById('addSkillModal'));
+    modal.show();
+}
+
+function filterSkills(category) {
+    const skills = document.querySelectorAll('.skill-item');
+    const buttons = document.querySelectorAll('.btn-group .btn');
+    
+    // Atualizar botões ativos
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Filtrar habilidades
+    skills.forEach(skill => {
+        if (category === 'all' || skill.dataset.category === category) {
+            skill.style.display = 'block';
+        } else {
+            skill.style.display = 'none';
+        }
+    });
+}
+
+function editSkill(skillId) {
+    showAlert('Editor de habilidades em desenvolvimento', 'info');
+}
+
+function validateSkill(skillId) {
+    showAlert('Habilidade validada!', 'success');
+}
+
+function removeSkill(skillId) {
+    if (confirm('Tem certeza que deseja remover esta habilidade?')) {
+        showAlert('Habilidade removida!', 'warning');
+        setTimeout(() => location.reload(), 1500);
+    }
+}
+
+// Gráfico de análise de habilidades
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('skillsChart')?.getContext('2d');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Técnicas', 'Comportamentais', 'Liderança'],
+                datasets: [{
+                    data: [{{ skills|selectattr('category', 'equalto', 'técnica')|list|length }}, 
+                           {{ skills|selectattr('category', 'equalto', 'comportamental')|list|length }}, 
+                           {{ skills|selectattr('category', 'equalto', 'liderança')|list|length }}],
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

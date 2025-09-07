@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Chat e Salas de Bate-papo{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-comments me-2"></i>Salas de Chat</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('chat_room', room_name='Geral') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i>Geral
+                        <span class="badge bg-primary float-end">{{ rooms.get('Geral', [])|length }}</span>
+                    </a>
+                    <a href="{{ url_for('chat_room', room_name='Networking') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-handshake me-2"></i>Networking
+                        <span class="badge bg-success float-end">{{ rooms.get('Networking', [])|length }}</span>
+                    </a>
+                    <a href="{{ url_for('chat_room', room_name='Entrevistas') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-microphone me-2"></i>Entrevistas
+                        <span class="badge bg-info float-end">{{ rooms.get('Entrevistas', [])|length }}</span>
+                    </a>
+                    <a href="{{ url_for('chat_room', room_name='Curriculos') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i>Currículos
+                        <span class="badge bg-warning float-end">{{ rooms.get('Curriculos', [])|length }}</span>
+                    </a>
+                    <a href="{{ url_for('chat_room', room_name='Dicas_Carreira') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-lightbulb me-2"></i>Dicas de Carreira
+                        <span class="badge bg-secondary float-end">{{ rooms.get('Dicas_Carreira', [])|length }}</span>
+                    </a>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-outline-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#createRoomModal">
+                        <i class="fas fa-plus me-1"></i>Nova Sala
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-comments me-2"></i>Central de Comunicação</h5>
+            </div>
+            <div class="card-body text-center">
+                <i class="fas fa-comments fa-4x text-muted mb-3"></i>
+                <h4>Bem-vindo ao Sistema de Chat</h4>
+                <p class="text-muted">Selecione uma sala de bate-papo na lateral para começar a conversar com outros executivos e consultores.</p>
+                
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h6>Networking</h6>
+                                <small>Conecte-se com outros profissionais</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <i class="fas fa-graduation-cap fa-2x text-success mb-2"></i>
+                                <h6>Aprendizagem</h6>
+                                <small>Compartilhe conhecimentos e experiências</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <i class="fas fa-heart fa-2x text-danger mb-2"></i>
+                                <h6>Suporte</h6>
+                                <small>Apoio emocional durante a transição</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Criar Nova Sala -->
+<div class="modal fade" id="createRoomModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Criar Nova Sala</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createRoomForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Sala</label>
+                        <input type="text" class="form-control" name="room_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="createRoom()">Criar Sala</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function createRoom() {
+    const form = document.getElementById('createRoomForm');
+    const formData = new FormData(form);
+    const roomName = formData.get('room_name');
+    
+    if (roomName) {
+        window.location.href = `/chat/${encodeURIComponent(roomName)}`;
+    }
+}
+</script>
+{% endblock %}

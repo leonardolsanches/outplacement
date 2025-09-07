@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Documentos - {{ executive.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-file-alt me-2"></i>Documentos - {{ executive.name }}</h5>
+                <div>
+                    <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
+                        <i class="fas fa-plus me-1"></i>Adicionar Documento
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if documents %}
+                <div class="row">
+                    {% for document in documents %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card {% if document.status == 'approved' %}border-success{% elif document.status == 'final' %}border-primary{% else %}border-secondary{% endif %}">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if document.type == 'curriculum' %}
+                                    <i class="fas fa-file-alt text-primary me-2"></i>
+                                    {% elif document.type == 'cover_letter' %}
+                                    <i class="fas fa-envelope text-info me-2"></i>
+                                    {% elif document.type == 'certificate' %}
+                                    <i class="fas fa-certificate text-warning me-2"></i>
+                                    {% else %}
+                                    <i class="fas fa-folder text-secondary me-2"></i>
+                                    {% endif %}
+                                    <strong>{{ document.title }}</strong>
+                                </div>
+                                <span class="badge bg-{% if document.status == 'approved' %}success{% elif document.status == 'final' %}primary{% else %}secondary{% endif %}">
+                                    {{ document.status.title() }}
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <small class="text-muted">Tipo:</small><br>
+                                    <span>{{ document.type.replace('_', ' ').title() }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">Versão:</small> {{ document.version }}
+                                </div>
+                                {% if document.description %}
+                                <div class="mb-2">
+                                    <small class="text-muted">Descrição:</small><br>
+                                    <small>{{ document.description }}</small>
+                                </div>
+                                {% endif %}
+                                <div class="mb-2">
+                                    <small class="text-muted">Criado em:</small> {{ document.created_at[:10] }}
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">Atualizado em:</small> {{ document.updated_at[:10] }}
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="btn-group w-100" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="previewDocument('{{ document.id }}')">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success" onclick="downloadDocument('{{ document.id }}')">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="editDocument('{{ document.id }}')">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-info" onclick="shareDocument('{{ document.id }}')">
+                                        <i class="fas fa-share"></i> Compartilhar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+                    <h4>Nenhum documento cadastrado</h4>
+                    <p class="text-muted">Adicione currículos, cartas de apresentação e outros documentos importantes.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
+                        <i class="fas fa-plus me-1"></i>Adicionar Primeiro Documento
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar com Templates -->
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-clipboard-list me-2"></i>Templates Disponíveis</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="useTemplate('curriculum')">
+                        <i class="fas fa-file-alt me-1"></i>Template CV
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" onclick="useTemplate('cover_letter')">
+                        <i class="fas fa-envelope me-1"></i>Carta de Apresentação
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" onclick="useTemplate('linkedin')">
+                        <i class="fab fa-linkedin me-1"></i>Perfil LinkedIn
+                    </button>
+                    <button class="btn btn-outline-warning btn-sm" onclick="useTemplate('portfolio')">
+                        <i class="fas fa-folder me-1"></i>Portfólio
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-lightbulb me-2"></i>Dicas</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-1"></i>
+                        Mantenha sempre versões atualizadas
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-1"></i>
+                        Use palavras-chave do setor
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-1"></i>
+                        Quantifique suas conquistas
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-1"></i>
+                        Personalize para cada vaga
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar Documento -->
+<div class="modal fade" id="addDocumentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Novo Documento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addDocumentForm">
+                    <input type="hidden" name="executive_id" value="{{ executive.id }}">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Título do Documento *</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tipo *</label>
+                            <select class="form-select" name="type" required>
+                                <option value="">Selecione...</option>
+                                <option value="curriculum">Currículo</option>
+                                <option value="cover_letter">Carta de Apresentação</option>
+                                <option value="certificate">Certificado</option>
+                                <option value="portfolio">Portfólio</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Versão</label>
+                            <input type="text" class="form-control" name="version" value="1.0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="draft">Rascunho</option>
+                                <option value="final">Final</option>
+                                <option value="approved">Aprovado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Descreva o documento e sua finalidade..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Arquivo</label>
+                        <input type="file" class="form-control" name="file" accept=".pdf,.doc,.docx">
+                        <small class="form-text text-muted">Formatos aceitos: PDF, DOC, DOCX</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addDocument()">Adicionar Documento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addDocument() {
+    const form = document.getElementById('addDocumentForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Simular upload de arquivo
+    data.file_path = '/documents/' + (data.file?.name || 'documento.pdf');
+    
+    fetch('/api/documents', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Documento adicionado com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao adicionar documento', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao adicionar documento', 'danger');
+    });
+}
+
+function previewDocument(documentId) {
+    showAlert('Visualização do documento em desenvolvimento', 'info');
+}
+
+function downloadDocument(documentId) {
+    showAlert('Download iniciado!', 'success');
+}
+
+function editDocument(documentId) {
+    showAlert('Editor de documentos em desenvolvimento', 'info');
+}
+
+function shareDocument(documentId) {
+    showAlert('Documento compartilhado!', 'success');
+}
+
+function useTemplate(templateType) {
+    // Preencher formulário com template
+    document.querySelector('select[name="type"]').value = templateType;
+    document.querySelector('input[name="title"]').value = templateType.replace('_', ' ').toUpperCase();
+    
+    const modal = new bootstrap.Modal(document.getElementById('addDocumentModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

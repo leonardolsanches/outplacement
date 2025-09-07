@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Empresas Target{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-building me-2"></i>Empresas Target</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal">
+                <i class="fas fa-plus me-1"></i>Adicionar Empresa
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros e Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="">Todos os Status</option>
+                    <option value="prospecting">Prospecção</option>
+                    <option value="contacted">Contatada</option>
+                    <option value="interviewed">Entrevistada</option>
+                    <option value="rejected">Rejeitada</option>
+                    <option value="hired">Contratada</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="priorityFilter">
+                    <option value="">Todas as Prioridades</option>
+                    <option value="high">Alta</option>
+                    <option value="medium">Média</option>
+                    <option value="low">Baixa</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="searchCompany" placeholder="Buscar empresa...">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="clearCompanyFilters()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="row text-center">
+            <div class="col-4">
+                <div class="small text-muted">Total</div>
+                <div class="h4 text-primary">{{ companies|length }}</div>
+            </div>
+            <div class="col-4">
+                <div class="small text-muted">Contatadas</div>
+                <div class="h4 text-success">{{ companies|selectattr('status', 'equalto', 'contacted')|list|length }}</div>
+            </div>
+            <div class="col-4">
+                <div class="small text-muted">Entrevistas</div>
+                <div class="h4 text-warning">{{ companies|selectattr('status', 'equalto', 'interviewed')|list|length }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Empresas -->
+<div class="row" id="companiesList">
+    {% if companies %}
+        {% for company in companies %}
+        <div class="col-md-6 col-lg-4 mb-3 company-card" 
+             data-status="{{ company.status }}" 
+             data-priority="{{ company.priority }}"
+             data-name="{{ company.name.lower() }}">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">{{ company.name }}</h6>
+                    <div class="d-flex gap-1">
+                        <span class="badge bg-{% if company.priority == 'high' %}danger{% elif company.priority == 'medium' %}warning{% else %}secondary{% endif %}">
+                            {{ company.priority.title() }}
+                        </span>
+                        <span class="badge bg-{% if company.status == 'prospecting' %}secondary{% elif company.status == 'contacted' %}primary{% elif company.status == 'interviewed' %}warning{% elif company.status == 'rejected' %}danger{% else %}success{% endif %}">
+                            {{ company.status.title() }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Setor:</small><br>
+                        <span>{{ company.industry or 'Não informado' }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Porte:</small><br>
+                        <span>{{ company.size.title() if company.size else 'Não informado' }}</span>
+                    </div>
+                    {% if company.location %}
+                    <div class="mb-2">
+                        <small class="text-muted">Localização:</small><br>
+                        <span><i class="fas fa-map-marker-alt me-1"></i>{{ company.location }}</span>
+                    </div>
+                    {% endif %}
+                    {% if company.contact_person %}
+                    <div class="mb-2">
+                        <small class="text-muted">Contato:</small><br>
+                        <span>{{ company.contact_person }}</span>
+                        {% if company.contact_email %}
+                        <br><small><a href="mailto:{{ company.contact_email }}">{{ company.contact_email }}</a></small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if company.description %}
+                    <div class="mb-2">
+                        <small class="text-muted">Descrição:</small><br>
+                        <small>{{ company.description[:80] }}{% if company.description|length > 80 %}...{% endif %}</small>
+                    </div>
+                    {% endif %}
+                    {% if company.application_date %}
+                    <div class="mb-2">
+                        <small class="text-muted">Data da Candidatura:</small><br>
+                        <small>{{ company.application_date }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100" role="group">
+                        {% if company.website %}
+                        <a href="{{ company.website }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editCompany('{{ company.id }}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="addNote('{{ company.id }}')">
+                            <i class="fas fa-sticky-note"></i>
+                        </button>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-tasks"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus('{{ company.id }}', 'contacted')">
+                                    Marcar como Contatada
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus('{{ company.id }}', 'interviewed')">
+                                    Marcar como Entrevistada
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus('{{ company.id }}', 'rejected')">
+                                    Marcar como Rejeitada
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus('{{ company.id }}', 'hired')">
+                                    Marcar como Contratada
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-building fa-4x text-muted mb-3"></i>
+                <h4>Nenhuma empresa target cadastrada</h4>
+                <p class="text-muted">Comece adicionando as empresas onde gostaria de trabalhar.</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal">
+                    <i class="fas fa-plus me-1"></i>Adicionar Primeira Empresa
+                </button>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal para Adicionar Empresa -->
+<div class="modal fade" id="addCompanyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Empresa Target</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCompanyForm">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Nome da Empresa *</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Porte</label>
+                            <select class="form-select" name="size">
+                                <option value="">Selecione...</option>
+                                <option value="pequena">Pequena</option>
+                                <option value="media">Média</option>
+                                <option value="grande">Grande</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Setor</label>
+                            <input type="text" class="form-control" name="industry" placeholder="Ex: Tecnologia, Financeiro...">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Localização</label>
+                            <input type="text" class="form-control" name="location" placeholder="Cidade, Estado">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Website</label>
+                            <input type="url" class="form-control" name="website" placeholder="https://...">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Prioridade</label>
+                            <select class="form-select" name="priority">
+                                <option value="medium">Média</option>
+                                <option value="high">Alta</option>
+                                <option value="low">Baixa</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Pessoa de Contato</label>
+                            <input type="text" class="form-control" name="contact_person">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">E-mail do Contato</label>
+                            <input type="email" class="form-control" name="contact_email">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Por que quer trabalhar nesta empresa? O que sabe sobre ela?"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-control" name="notes" rows="2" placeholder="Informações adicionais, estratégia de abordagem, etc."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addCompany()">Adicionar Empresa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Adicionar empresa
+function addCompany() {
+    const form = document.getElementById('addCompanyForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/api/companies', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Empresa adicionada com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao adicionar empresa', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao adicionar empresa', 'danger');
+    });
+}
+
+// Filtros
+document.getElementById('statusFilter').addEventListener('change', applyCompanyFilters);
+document.getElementById('priorityFilter').addEventListener('change', applyCompanyFilters);
+document.getElementById('searchCompany').addEventListener('input', applyCompanyFilters);
+
+function applyCompanyFilters() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const priorityFilter = document.getElementById('priorityFilter').value;
+    const searchFilter = document.getElementById('searchCompany').value.toLowerCase();
+    
+    const cards = document.querySelectorAll('.company-card');
+    
+    cards.forEach(card => {
+        const status = card.dataset.status;
+        const priority = card.dataset.priority;
+        const name = card.dataset.name;
+        
+        let show = true;
+        
+        if (statusFilter && status !== statusFilter) show = false;
+        if (priorityFilter && priority !== priorityFilter) show = false;
+        if (searchFilter && !name.includes(searchFilter)) show = false;
+        
+        card.style.display = show ? 'block' : 'none';
+    });
+}
+
+function clearCompanyFilters() {
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('priorityFilter').value = '';
+    document.getElementById('searchCompany').value = '';
+    applyCompanyFilters();
+}
+
+function updateStatus(companyId, newStatus) {
+    showAlert(`Status atualizado para: ${newStatus}`, 'success');
+    setTimeout(() => location.reload(), 1500);
+}
+
+function editCompany(companyId) {
+    showAlert('Funcionalidade de edição em desenvolvimento', 'info');
+}
+
+function addNote(companyId) {
+    const note = prompt('Adicione uma nota sobre esta empresa:');
+    if (note) {
+        showAlert('Nota adicionada com sucesso!', 'success');
+    }
+}
+</script>
+{% endblock %}

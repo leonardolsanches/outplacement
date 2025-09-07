@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Repositório de Conteúdos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-folder-open me-2"></i>Repositório de Conteúdos</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContentModal">
+                <i class="fas fa-plus me-1"></i>Adicionar Conteúdo
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <select class="form-select" id="categoryFilter">
+            <option value="">Todas as Categorias</option>
+            <option value="Curriculos">Currículos e CVs</option>
+            <option value="Entrevistas">Entrevistas</option>
+            <option value="Networking">Networking</option>
+            <option value="Carreira">Desenvolvimento de Carreira</option>
+            <option value="LinkedIn">LinkedIn e Redes Sociais</option>
+            <option value="Templates">Templates</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="typeFilter">
+            <option value="">Todos os Tipos</option>
+            <option value="document">Documentos</option>
+            <option value="video">Vídeos</option>
+            <option value="article">Artigos</option>
+            <option value="template">Templates</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <input type="text" class="form-control" id="searchContent" placeholder="Buscar conteúdo...">
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-outline-secondary w-100" onclick="clearContentFilters()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Conteúdos por Categoria -->
+{% if categories %}
+    {% for category, contents in categories.items() %}
+    <div class="content-category mb-4" data-category="{{ category }}">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-folder me-2"></i>{{ category }}
+                    <span class="badge bg-primary ms-2">{{ contents|length }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for content in contents %}
+                    <div class="col-md-6 col-lg-4 mb-3 content-item" 
+                         data-type="{{ content.type }}" 
+                         data-title="{{ content.title.lower() }}">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="content-icon">
+                                        {% if content.type == 'document' %}
+                                        <i class="fas fa-file-alt fa-2x text-primary"></i>
+                                        {% elif content.type == 'video' %}
+                                        <i class="fas fa-play-circle fa-2x text-danger"></i>
+                                        {% elif content.type == 'article' %}
+                                        <i class="fas fa-newspaper fa-2x text-info"></i>
+                                        {% else %}
+                                        <i class="fas fa-file fa-2x text-secondary"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="{{ content.url }}" target="_blank">
+                                                <i class="fas fa-external-link-alt me-1"></i>Abrir
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="downloadContent('{{ content.id }}')">
+                                                <i class="fas fa-download me-1"></i>Download
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="shareContent('{{ content.id }}')">
+                                                <i class="fas fa-share me-1"></i>Compartilhar
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <h6 class="card-title">{{ content.title }}</h6>
+                                <p class="card-text small text-muted">{{ content.description[:100] }}{% if content.description|length > 100 %}...{% endif %}</p>
+                                
+                                <div class="mb-2">
+                                    {% for tag in content.tags %}
+                                    <span class="badge bg-light text-dark me-1">#{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-download me-1"></i>{{ content.downloads }} downloads
+                                    </small>
+                                    <div class="rating">
+                                        {% for i in range(5) %}
+                                        <i class="fas fa-star {% if i < content.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <small class="text-muted">
+                                    Adicionado em {{ content.created_at[:10] }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+        <h4>Repositório Vazio</h4>
+        <p class="text-muted">Comece adicionando materiais úteis para a comunidade de executivos.</p>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContentModal">
+            <i class="fas fa-plus me-1"></i>Adicionar Primeiro Conteúdo
+        </button>
+    </div>
+{% endif %}
+
+<!-- Modal para Adicionar Conteúdo -->
+<div class="modal fade" id="addContentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Novo Conteúdo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addContentForm">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Título *</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tipo *</label>
+                            <select class="form-select" name="type" required>
+                                <option value="">Selecione...</option>
+                                <option value="document">Documento</option>
+                                <option value="video">Vídeo</option>
+                                <option value="article">Artigo</option>
+                                <option value="template">Template</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Categoria *</label>
+                            <select class="form-select" name="category" required>
+                                <option value="">Selecione...</option>
+                                <option value="Curriculos">Currículos e CVs</option>
+                                <option value="Entrevistas">Entrevistas</option>
+                                <option value="Networking">Networking</option>
+                                <option value="Carreira">Desenvolvimento de Carreira</option>
+                                <option value="LinkedIn">LinkedIn e Redes Sociais</option>
+                                <option value="Templates">Templates</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">URL/Link *</label>
+                            <input type="url" class="form-control" name="url" required placeholder="https://...">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Descreva o conteúdo e sua utilidade..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tags</label>
+                        <input type="text" class="form-control" name="tags" placeholder="curriculo, template, carreira (separadas por vírgula)">
+                        <small class="form-text text-muted">Separe as tags com vírgulas</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addContent()">Adicionar Conteúdo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Adicionar conteúdo
+function addContent() {
+    const form = document.getElementById('addContentForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Processar tags
+    if (data.tags) {
+        data.tags = data.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    } else {
+        data.tags = [];
+    }
+    
+    fetch('/api/content', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Conteúdo adicionado com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao adicionar conteúdo', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao adicionar conteúdo', 'danger');
+    });
+}
+
+// Filtros
+document.getElementById('categoryFilter').addEventListener('change', applyContentFilters);
+document.getElementById('typeFilter').addEventListener('change', applyContentFilters);
+document.getElementById('searchContent').addEventListener('input', applyContentFilters);
+
+function applyContentFilters() {
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    const searchFilter = document.getElementById('searchContent').value.toLowerCase();
+    
+    const categories = document.querySelectorAll('.content-category');
+    const items = document.querySelectorAll('.content-item');
+    
+    // Filtrar itens
+    items.forEach(item => {
+        const type = item.dataset.type;
+        const title = item.dataset.title;
+        
+        let show = true;
+        if (typeFilter && type !== typeFilter) show = false;
+        if (searchFilter && !title.includes(searchFilter)) show = false;
+        
+        item.style.display = show ? 'block' : 'none';
+    });
+    
+    // Mostrar/ocultar categorias
+    categories.forEach(category => {
+        const categoryName = category.dataset.category;
+        const visibleItems = category.querySelectorAll('.content-item:not([style*="display: none"])');
+        
+        let showCategory = true;
+        if (categoryFilter && categoryName !== categoryFilter) showCategory = false;
+        if (visibleItems.length === 0) showCategory = false;
+        
+        category.style.display = showCategory ? 'block' : 'none';
+    });
+}
+
+function clearContentFilters() {
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('searchContent').value = '';
+    applyContentFilters();
+}
+
+function downloadContent(contentId) {
+    showAlert('Download iniciado!', 'success');
+}
+
+function shareContent(contentId) {
+    // Copiar link para clipboard
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        showAlert('Link copiado para área de transferência!', 'success');
+    });
+}
+</script>
+{% endblock %}

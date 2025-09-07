@@ -19,9 +19,42 @@
                 <a class="nav-link" href="{{ url_for('dashboard') }}">
                     <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                 </a>
+                
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-users me-1"></i>Comunidade
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('chat_rooms') }}">
+                            <i class="fas fa-comments me-1"></i>Chat e Salas
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('networking') }}">
+                            <i class="fas fa-handshake me-1"></i>Networking
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('executive_meetings') }}">
+                            <i class="fas fa-calendar-alt me-1"></i>Encontros
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-briefcase me-1"></i>Carreira
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('target_companies') }}">
+                            <i class="fas fa-building me-1"></i>Empresas Target
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('content_repository') }}">
+                            <i class="fas fa-folder-open me-1"></i>Repositório
+                        </a></li>
+                    </ul>
+                </div>
+                
                 <a class="nav-link" href="{{ url_for('reports') }}">
                     <i class="fas fa-chart-line me-1"></i>Relatórios
                 </a>
+                
                 <div class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-user me-1"></i>Administrador
