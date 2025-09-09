@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}{{ phase.name }} - {{ executive.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-tasks me-2"></i>Fase {{ phase_number }}: {{ phase.name }}</h2>
+                <h5 class="text-muted">{{ executive.name }} - {{ executive.company }}</h5>
+                <p class="text-muted">{{ phase.description }}</p>
+            </div>
+            <div>
+                <span class="badge bg-{% if phase.status == 'completed' %}success{% elif phase.status == 'in_progress' %}primary{% else %}secondary{% endif %} fs-6 me-2">
+                    {{ phase.progress }}%
+                </span>
+                <a href="{{ url_for('executive_journey', executive_id=executive.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar à Jornada
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progresso da Fase -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Progresso da Fase</h6>
+                <div class="progress mb-2" style="height: 30px;">
+                    <div class="progress-bar 
+                             {% if phase.progress == 100 %}bg-success{% elif phase.progress >= 50 %}bg-warning{% else %}bg-info{% endif %}" 
+                         style="width: {{ phase.progress }}%">
+                        {{ phase.progress }}%
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% if phase.start_date %}
+                        <small class="text-muted">Iniciado em: {{ phase.start_date[:10] }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 text-end">
+                        {% if phase.end_date %}
+                        <small class="text-success">Concluído em: {{ phase.end_date[:10] }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Atividades da Fase -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list-check me-2"></i>Atividades da Fase</h5>
+            </div>
+            <div class="card-body">
+                {% for activity_key, activity in phase.activities.items() %}
+                <div class="activity-card mb-4 p-3 border rounded {% if activity.completed %}border-success bg-light{% endif %}">
+                    <div class="d-flex align-items-start">
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="checkbox" 
+                                   id="activity_{{ activity_key }}" 
+                                   {% if activity.completed %}checked{% endif %}
+                                   onchange="updateActivity('{{ executive.id }}', '{{ phase_number }}', '{{ activity_key }}', this.checked)">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-2 {% if activity.completed %}text-success{% endif %}">
+                                <i class="fas fa-{% if activity.completed %}check-circle text-success{% else %}circle text-muted{% endif %} me-2"></i>
+                                {{ activity_key.replace('_', ' ').title() }}
+                            </h6>
+                            
+                            <!-- Descrição da Atividade -->
+                            <div class="activity-description mb-2">
+                                {% if activity_key == 'acolhimento_emocional' %}
+                                <p class="text-muted small">Sessão de acolhimento para apoio emocional e compreensão da situação atual do executivo.</p>
+                                {% elif activity_key == 'diagnostico_360' %}
+                                <p class="text-muted small">Avaliação completa de perfil, competências, motivações e potencial de desenvolvimento.</p>
+                                {% elif activity_key == 'plano_acao_individual' %}
+                                <p class="text-muted small">Elaboração de plano personalizado considerando múltiplas carreiras, objetivos e interesses.</p>
+                                {% elif activity_key == 'narrativa_marca_pessoal' %}
+                                <p class="text-muted small">Desenvolvimento de narrativa profissional, currículo otimizado e perfil LinkedIn.</p>
+                                {% elif activity_key == 'pitch_apresentacao' %}
+                                <p class="text-muted small">Criação e treinamento de pitch pessoal (versão curta e completa).</p>
+                                {% elif activity_key == 'oratoria_visibilidade' %}
+                                <p class="text-muted small">Treinamento em oratória e estratégias de visibilidade (audiovisual e presencial).</p>
+                                {% elif activity_key == 'reskilling_upskilling' %}
+                                <p class="text-muted small">Programas de capacitação com micro learning para atualização profissional.</p>
+                                {% elif activity_key == 'simulacoes_entrevistas' %}
+                                <p class="text-muted small">Treinamento intensivo com simulações de entrevistas diversas.</p>
+                                {% elif activity_key == 'relatorio_prontidao' %}
+                                <p class="text-muted small">Relatório detalhado sobre a prontidão do executivo para o mercado.</p>
+                                {% elif activity_key == 'mentorias_profissionais' %}
+                                <p class="text-muted small">Conexão com profissionais experientes de segmentos estratégicos.</p>
+                                {% elif activity_key == 'busca_ativa_posicoes' %}
+                                <p class="text-muted small">Estratégias e ferramentas para identificação proativa de oportunidades.</p>
+                                {% elif activity_key == 'rede_conexoes' %}
+                                <p class="text-muted small">Acesso à rede de conexões em Telecom, TI e Tecnologia.</p>
+                                {% elif activity_key == 'arenas_visibilidade' %}
+                                <p class="text-muted small">Participação em rodas de conexões e eventos de networking.</p>
+                                {% elif activity_key == 'relatorios_digitais' %}
+                                <p class="text-muted small">Dashboards e relatórios digitais de acompanhamento contínuo.</p>
+                                {% elif activity_key == 'indicadores_progresso' %}
+                                <p class="text-muted small">Métricas e indicadores de progresso da transição de carreira.</p>
+                                {% elif activity_key == 'dossie_final' %}
+                                <p class="text-muted small">Dossiê completo final documentando toda a jornada de transição.</p>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Data de Conclusão -->
+                            {% if activity.completed and activity.date %}
+                            <div class="mb-2">
+                                <small class="text-success">
+                                    <i class="fas fa-calendar-check me-1"></i>
+                                    Concluído em: {{ activity.date[:10] }}
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Notas da Atividade -->
+                            <div class="activity-notes">
+                                <textarea class="form-control form-control-sm" 
+                                          placeholder="Adicione notas, observações ou resultados desta atividade..."
+                                          id="notes_{{ activity_key }}"
+                                          onchange="updateActivityNotes('{{ executive.id }}', '{{ phase_number }}', '{{ activity_key }}', this.value)">{{ activity.notes }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar com Orientações -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-lightbulb me-2"></i>Orientações da Fase</h6>
+            </div>
+            <div class="card-body">
+                {% if phase_number == '1' %}
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-heart text-danger me-2"></i>
+                        <strong>Acolhimento:</strong> Criar ambiente de confiança e suporte emocional
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-search text-info me-2"></i>
+                        <strong>Diagnóstico:</strong> Mapear competências, experiências e potencial
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-map text-success me-2"></i>
+                        <strong>Planejamento:</strong> Definir objetivos e traçar múltiplos caminhos
+                    </li>
+                </ul>
+                {% elif phase_number == '2' %}
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-user text-primary me-2"></i>
+                        <strong>Marca Pessoal:</strong> Construir identidade profissional única
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-microphone text-warning me-2"></i>
+                        <strong>Pitch:</strong> Desenvolver apresentação impactante
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-video text-danger me-2"></i>
+                        <strong>Visibilidade:</strong> Melhorar presença e comunicação
+                    </li>
+                </ul>
+                {% elif phase_number == '3' %}
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-graduation-cap text-success me-2"></i>
+                        <strong>Capacitação:</strong> Atualizar habilidades e conhecimentos
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-comments text-info me-2"></i>
+                        <strong>Simulações:</strong> Treinar entrevistas e situações reais
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-clipboard-check text-primary me-2"></i>
+                        <strong>Prontidão:</strong> Avaliar preparação para o mercado
+                    </li>
+                </ul>
+                {% elif phase_number == '4' %}
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-user-tie text-info me-2"></i>
+                        <strong>Mentorias:</strong> Conectar com especialistas do setor
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-search text-success me-2"></i>
+                        <strong>Busca Ativa:</strong> Identificar e conquistar oportunidades
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-network-wired text-warning me-2"></i>
+                        <strong>Networking:</strong> Expandir rede de contatos estratégicos
+                    </li>
+                </ul>
+                {% elif phase_number == '5' %}
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-chart-line text-primary me-2"></i>
+                        <strong>Monitoramento:</strong> Acompanhar indicadores de sucesso
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-file-alt text-info me-2"></i>
+                        <strong>Relatórios:</strong> Documentar evolução e resultados
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-trophy text-warning me-2"></i>
+                        <strong>Consolidação:</strong> Finalizar processo com sucesso
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Recursos e Links Úteis -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-link me-2"></i>Recursos Úteis</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('content_repository') }}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-folder-open me-1"></i>Repositório
+                    </a>
+                    <a href="{{ url_for('networking') }}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-handshake me-1"></i>Networking
+                    </a>
+                    <a href="{{ url_for('target_companies') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-building me-1"></i>Empresas Target
+                    </a>
+                    <a href="{{ url_for('coaching_communication', executive_id=executive.id) }}" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-comments me-1"></i>Chat Coach
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateActivity(executiveId, phaseNumber, activityKey, completed) {
+    const notesTextarea = document.getElementById(`notes_${activityKey}`);
+    const notes = notesTextarea ? notesTextarea.value : '';
+    
+    fetch('/api/phase/activity', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            executive_id: executiveId,
+            phase_number: phaseNumber,
+            activity_key: activityKey,
+            completed: completed,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert(completed ? 'Atividade concluída!' : 'Atividade desmarcada', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert(result.error || 'Erro ao atualizar atividade', 'danger');
+            // Reverter checkbox em caso de erro
+            document.getElementById(`activity_${activityKey}`).checked = !completed;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao atualizar atividade', 'danger');
+        document.getElementById(`activity_${activityKey}`).checked = !completed;
+    });
+}
+
+function updateActivityNotes(executiveId, phaseNumber, activityKey, notes) {
+    // Atualizar notas quando checkbox estiver marcado
+    const checkbox = document.getElementById(`activity_${activityKey}`);
+    if (checkbox && checkbox.checked) {
+        fetch('/api/phase/activity', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                executive_id: executiveId,
+                phase_number: phaseNumber,
+                activity_key: activityKey,
+                completed: true,
+                notes: notes
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showAlert('Notas atualizadas!', 'info');
+            }
+        });
+    }
+}
+
+// Auto-save das notas a cada 5 segundos
+setInterval(() => {
+    const textareas = document.querySelectorAll('.activity-notes textarea');
+    textareas.forEach(textarea => {
+        if (textarea.value !== textarea.defaultValue) {
+            const activityKey = textarea.id.replace('notes_', '');
+            const checkbox = document.getElementById(`activity_${activityKey}`);
+            if (checkbox && checkbox.checked) {
+                updateActivityNotes('{{ executive.id }}', '{{ phase_number }}', activityKey, textarea.value);
+                textarea.defaultValue = textarea.value;
+            }
+        }
+    });
+}, 5000);
+</script>
+
+<style>
+.activity-card {
+    transition: all 0.3s ease;
+}
+
+.activity-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.activity-notes textarea {
+    border: none;
+    background-color: #f8f9fa;
+    resize: vertical;
+    min-height: 60px;
+}
+
+.activity-notes textarea:focus {
+    background-color: white;
+    border: 1px solid #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+</style>
+{% endblock %}

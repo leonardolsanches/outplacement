@@ -251,7 +251,77 @@ def api_executives():
             'start_date': datetime.now().isoformat(),
             'status': 'active',
             'consultant_id': data.get('consultant_id', 'admin'),
-            'created_at': datetime.now().isoformat()
+            'created_at': datetime.now().isoformat(),
+            'current_phase': 1,
+            'overall_progress': 0,
+            'phases': {
+                '1': {
+                    'name': 'Acolhimento & Diagnóstico',
+                    'description': 'Acolhimento emocional, diagnóstico 360° e plano de ação individual',
+                    'status': 'in_progress',
+                    'progress': 0,
+                    'start_date': datetime.now().isoformat(),
+                    'end_date': None,
+                    'activities': {
+                        'acolhimento_emocional': {'completed': False, 'date': None, 'notes': ''},
+                        'diagnostico_360': {'completed': False, 'date': None, 'notes': ''},
+                        'plano_acao_individual': {'completed': False, 'date': None, 'notes': ''}
+                    }
+                },
+                '2': {
+                    'name': 'Narrativa & Marca Pessoal',
+                    'description': 'Construção de narrativa, marca pessoal e pitch de apresentação',
+                    'status': 'pending',
+                    'progress': 0,
+                    'start_date': None,
+                    'end_date': None,
+                    'activities': {
+                        'narrativa_marca_pessoal': {'completed': False, 'date': None, 'notes': ''},
+                        'pitch_apresentacao': {'completed': False, 'date': None, 'notes': ''},
+                        'oratoria_visibilidade': {'completed': False, 'date': None, 'notes': ''}
+                    }
+                },
+                '3': {
+                    'name': 'Preparação para o Mercado',
+                    'description': 'ReSkilling, UpSkilling e preparação para entrevistas',
+                    'status': 'pending',
+                    'progress': 0,
+                    'start_date': None,
+                    'end_date': None,
+                    'activities': {
+                        'reskilling_upskilling': {'completed': False, 'date': None, 'notes': ''},
+                        'simulacoes_entrevistas': {'completed': False, 'date': None, 'notes': ''},
+                        'relatorio_prontidao': {'completed': False, 'date': None, 'notes': ''}
+                    }
+                },
+                '4': {
+                    'name': 'Conexão com o Mercado',
+                    'description': 'Mentorias, busca ativa e rede de conexões',
+                    'status': 'pending',
+                    'progress': 0,
+                    'start_date': None,
+                    'end_date': None,
+                    'activities': {
+                        'mentorias_profissionais': {'completed': False, 'date': None, 'notes': ''},
+                        'busca_ativa_posicoes': {'completed': False, 'date': None, 'notes': ''},
+                        'rede_conexoes': {'completed': False, 'date': None, 'notes': ''},
+                        'arenas_visibilidade': {'completed': False, 'date': None, 'notes': ''}
+                    }
+                },
+                '5': {
+                    'name': 'Acompanhamento & Consolidação',
+                    'description': 'Relatórios de progresso e dossiê final de transição',
+                    'status': 'pending',
+                    'progress': 0,
+                    'start_date': None,
+                    'end_date': None,
+                    'activities': {
+                        'relatorios_digitais': {'completed': False, 'date': None, 'notes': ''},
+                        'indicadores_progresso': {'completed': False, 'date': None, 'notes': ''},
+                        'dossie_final': {'completed': False, 'date': None, 'notes': ''}
+                    }
+                }
+            }
         }
         
         executives.append(new_executive)
@@ -771,6 +841,198 @@ def coaching_communication(executive_id):
     coaching_chats = [chat for chat in chats if chat.get('room') == f'coaching_{executive_id}']
     
     return render_template('coaching.html', executive=executive, messages=coaching_chats)
+
+# Sistema de Governança - 5 Fases da Jornada
+@app.route('/journey/<executive_id>')
+def executive_journey(executive_id):
+    """Visualização da jornada completa do executivo nas 5 fases"""
+    executives = load_json(EXECUTIVES_FILE)
+    executive = next((e for e in executives if e['id'] == executive_id), None)
+    
+    if not executive:
+        flash('Executivo não encontrado')
+        return redirect(url_for('dashboard'))
+    
+    # Garantir compatibilidade com executivos antigos
+    if 'phases' not in executive:
+        executive = migrate_executive_to_phases(executive)
+        executives = [e if e['id'] != executive_id else executive for e in executives]
+        save_json(EXECUTIVES_FILE, executives)
+    
+    return render_template('journey.html', executive=executive)
+
+@app.route('/phase/<executive_id>/<phase_number>')
+def phase_details(executive_id, phase_number):
+    """Detalhes de uma fase específica"""
+    executives = load_json(EXECUTIVES_FILE)
+    executive = next((e for e in executives if e['id'] == executive_id), None)
+    
+    if not executive or phase_number not in executive.get('phases', {}):
+        flash('Fase não encontrada')
+        return redirect(url_for('dashboard'))
+    
+    phase = executive['phases'][phase_number]
+    return render_template('phase_details.html', executive=executive, phase=phase, phase_number=phase_number)
+
+@app.route('/api/phase/activity', methods=['POST'])
+def update_phase_activity():
+    """Atualizar status de uma atividade da fase"""
+    data = request.json or {}
+    executives = load_json(EXECUTIVES_FILE)
+    
+    executive_id = data.get('executive_id')
+    phase_number = data.get('phase_number')
+    activity_key = data.get('activity_key')
+    completed = data.get('completed', False)
+    notes = data.get('notes', '')
+    
+    executive = next((e for e in executives if e['id'] == executive_id), None)
+    if not executive:
+        return jsonify({'success': False, 'error': 'Executivo não encontrado'})
+    
+    if phase_number not in executive.get('phases', {}):
+        return jsonify({'success': False, 'error': 'Fase não encontrada'})
+    
+    # Atualizar atividade
+    if activity_key in executive['phases'][phase_number]['activities']:
+        executive['phases'][phase_number]['activities'][activity_key] = {
+            'completed': completed,
+            'date': datetime.now().isoformat() if completed else None,
+            'notes': notes
+        }
+        
+        # Calcular progresso da fase
+        activities = executive['phases'][phase_number]['activities']
+        completed_activities = sum(1 for act in activities.values() if act['completed'])
+        total_activities = len(activities)
+        progress = int((completed_activities / total_activities) * 100)
+        
+        executive['phases'][phase_number]['progress'] = progress
+        
+        # Se fase concluída (100%), marcar como completed
+        if progress == 100:
+            executive['phases'][phase_number]['status'] = 'completed'
+            executive['phases'][phase_number]['end_date'] = datetime.now().isoformat()
+        
+        # Calcular progresso geral
+        total_progress = sum(phase['progress'] for phase in executive['phases'].values())
+        executive['overall_progress'] = int(total_progress / 5)
+        
+        # Atualizar lista
+        executives = [e if e['id'] != executive_id else executive for e in executives]
+        save_json(EXECUTIVES_FILE, executives)
+        
+        return jsonify({'success': True, 'progress': progress, 'overall_progress': executive['overall_progress']})
+    
+    return jsonify({'success': False, 'error': 'Atividade não encontrada'})
+
+@app.route('/api/phase/advance', methods=['POST'])
+def advance_to_next_phase():
+    """Avançar para a próxima fase"""
+    data = request.json or {}
+    executives = load_json(EXECUTIVES_FILE)
+    
+    executive_id = data.get('executive_id')
+    executive = next((e for e in executives if e['id'] == executive_id), None)
+    
+    if not executive:
+        return jsonify({'success': False, 'error': 'Executivo não encontrado'})
+    
+    current_phase = executive.get('current_phase', 1)
+    
+    # Verificar se fase atual está 100% completa
+    current_phase_data = executive['phases'][str(current_phase)]
+    if current_phase_data['progress'] < 100:
+        return jsonify({'success': False, 'error': 'Fase atual não está completa'})
+    
+    # Avançar para próxima fase
+    if current_phase < 5:
+        next_phase = current_phase + 1
+        executive['current_phase'] = next_phase
+        executive['phases'][str(next_phase)]['status'] = 'in_progress'
+        executive['phases'][str(next_phase)]['start_date'] = datetime.now().isoformat()
+        
+        # Atualizar lista
+        executives = [e if e['id'] != executive_id else executive for e in executives]
+        save_json(EXECUTIVES_FILE, executives)
+        
+        return jsonify({'success': True, 'new_phase': next_phase})
+    else:
+        return jsonify({'success': False, 'error': 'Jornada já concluída'})
+
+def migrate_executive_to_phases(executive):
+    """Migrar executivo antigo para o novo formato com fases"""
+    executive['current_phase'] = 1
+    executive['overall_progress'] = 0
+    executive['phases'] = {
+        '1': {
+            'name': 'Acolhimento & Diagnóstico',
+            'description': 'Acolhimento emocional, diagnóstico 360° e plano de ação individual',
+            'status': 'in_progress',
+            'progress': 0,
+            'start_date': executive.get('start_date', datetime.now().isoformat()),
+            'end_date': None,
+            'activities': {
+                'acolhimento_emocional': {'completed': False, 'date': None, 'notes': ''},
+                'diagnostico_360': {'completed': False, 'date': None, 'notes': ''},
+                'plano_acao_individual': {'completed': False, 'date': None, 'notes': ''}
+            }
+        },
+        '2': {
+            'name': 'Narrativa & Marca Pessoal',
+            'description': 'Construção de narrativa, marca pessoal e pitch de apresentação',
+            'status': 'pending',
+            'progress': 0,
+            'start_date': None,
+            'end_date': None,
+            'activities': {
+                'narrativa_marca_pessoal': {'completed': False, 'date': None, 'notes': ''},
+                'pitch_apresentacao': {'completed': False, 'date': None, 'notes': ''},
+                'oratoria_visibilidade': {'completed': False, 'date': None, 'notes': ''}
+            }
+        },
+        '3': {
+            'name': 'Preparação para o Mercado',
+            'description': 'ReSkilling, UpSkilling e preparação para entrevistas',
+            'status': 'pending',
+            'progress': 0,
+            'start_date': None,
+            'end_date': None,
+            'activities': {
+                'reskilling_upskilling': {'completed': False, 'date': None, 'notes': ''},
+                'simulacoes_entrevistas': {'completed': False, 'date': None, 'notes': ''},
+                'relatorio_prontidao': {'completed': False, 'date': None, 'notes': ''}
+            }
+        },
+        '4': {
+            'name': 'Conexão com o Mercado',
+            'description': 'Mentorias, busca ativa e rede de conexões',
+            'status': 'pending',
+            'progress': 0,
+            'start_date': None,
+            'end_date': None,
+            'activities': {
+                'mentorias_profissionais': {'completed': False, 'date': None, 'notes': ''},
+                'busca_ativa_posicoes': {'completed': False, 'date': None, 'notes': ''},
+                'rede_conexoes': {'completed': False, 'date': None, 'notes': ''},
+                'arenas_visibilidade': {'completed': False, 'date': None, 'notes': ''}
+            }
+        },
+        '5': {
+            'name': 'Acompanhamento & Consolidação',
+            'description': 'Relatórios de progresso e dossiê final de transição',
+            'status': 'pending',
+            'progress': 0,
+            'start_date': None,
+            'end_date': None,
+            'activities': {
+                'relatorios_digitais': {'completed': False, 'date': None, 'notes': ''},
+                'indicadores_progresso': {'completed': False, 'date': None, 'notes': ''},
+                'dossie_final': {'completed': False, 'date': None, 'notes': ''}
+            }
+        }
+    }
+    return executive
 
 if __name__ == '__main__':
     init_json_files()

@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Jornada do Executivo - {{ executive.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-route me-2"></i>Jornada do Executivo</h2>
+                <h4 class="text-muted">{{ executive.name }} - {{ executive.company }}</h4>
+            </div>
+            <div>
+                <span class="badge bg-primary fs-6 me-2">Progresso Geral: {{ executive.overall_progress or 0 }}%</span>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Barra de Progresso Geral -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Progresso da Jornada Completa</h6>
+                <div class="progress mb-2" style="height: 25px;">
+                    <div class="progress-bar bg-success" style="width: {{ executive.overall_progress or 0 }}%">
+                        {{ executive.overall_progress or 0 }}%
+                    </div>
+                </div>
+                <small class="text-muted">
+                    Fase Atual: {{ executive.current_phase or 1 }} - {{ executive.phases[executive.current_phase|string]['name'] }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timeline das 5 Fases -->
+<div class="row">
+    <div class="col-12">
+        {% for phase_num in ['1', '2', '3', '4', '5'] %}
+        {% set phase = executive.phases[phase_num] %}
+        <div class="card mb-4 {% if phase.status == 'completed' %}border-success{% elif phase.status == 'in_progress' %}border-primary{% else %}border-secondary{% endif %}">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="phase-number me-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center 
+                                         {% if phase.status == 'completed' %}bg-success{% elif phase.status == 'in_progress' %}bg-primary{% else %}bg-secondary{% endif %} 
+                                         text-white fw-bold" style="width: 40px; height: 40px;">
+                                    {{ phase_num }}
+                                </div>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">{{ phase.name }}</h5>
+                                <p class="text-muted mb-0">{{ phase.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge bg-{% if phase.status == 'completed' %}success{% elif phase.status == 'in_progress' %}primary{% else %}secondary{% endif %} me-2">
+                            {{ phase.status.replace('_', ' ').title() }}
+                        </span>
+                        <span class="badge bg-info">{{ phase.progress }}%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Progresso da Fase -->
+                        <div class="mb-3">
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar 
+                                         {% if phase.progress == 100 %}bg-success{% elif phase.progress >= 50 %}bg-warning{% else %}bg-info{% endif %}" 
+                                     style="width: {{ phase.progress }}%">
+                                    {{ phase.progress }}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Atividades da Fase -->
+                        <div class="activities-summary">
+                            <h6>Atividades:</h6>
+                            <div class="row">
+                                {% for activity_key, activity in phase.activities.items() %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-{% if activity.completed %}check-circle text-success{% else %}circle text-muted{% endif %} me-2"></i>
+                                        <span class="{% if activity.completed %}text-success{% endif %}">
+                                            {{ activity_key.replace('_', ' ').title() }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Datas e Informações -->
+                        <div class="phase-info">
+                            {% if phase.start_date %}
+                            <div class="mb-2">
+                                <small class="text-muted">Início:</small><br>
+                                <small>{{ phase.start_date[:10] }}</small>
+                            </div>
+                            {% endif %}
+                            {% if phase.end_date %}
+                            <div class="mb-2">
+                                <small class="text-muted">Conclusão:</small><br>
+                                <small>{{ phase.end_date[:10] }}</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Ações -->
+                        <div class="phase-actions mt-3">
+                            <a href="{{ url_for('phase_details', executive_id=executive.id, phase_number=phase_num) }}" 
+                               class="btn btn-outline-primary btn-sm me-2">
+                                <i class="fas fa-eye me-1"></i>Ver Detalhes
+                            </a>
+                            
+                            {% if phase.status == 'in_progress' %}
+                            <button class="btn btn-outline-success btn-sm" 
+                                    onclick="managePhase('{{ executive.id }}', '{{ phase_num }}')">
+                                <i class="fas fa-tasks me-1"></i>Gerenciar
+                            </button>
+                            {% endif %}
+                            
+                            {% if phase.status == 'completed' and phase_num|int < 5 %}
+                            {% set next_phase = (phase_num|int + 1)|string %}
+                            {% if executive.phases[next_phase].status == 'pending' %}
+                            <button class="btn btn-success btn-sm" 
+                                    onclick="advancePhase('{{ executive.id }}')">
+                                <i class="fas fa-arrow-right me-1"></i>Próxima Fase
+                            </button>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Resumo e Estatísticas -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-calendar fa-2x text-primary mb-2"></i>
+                <h6>Tempo de Jornada</h6>
+                {% set start_date = executive.phases['1'].start_date %}
+                {% if start_date %}
+                <p class="small">Iniciado em {{ start_date[:10] }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                <h6>Fases Concluídas</h6>
+                <p class="h4">{{ executive.phases.values()|selectattr('status', 'equalto', 'completed')|list|length }}/5</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                <h6>Próximo Marco</h6>
+                <p class="small">
+                    {% if executive.current_phase|int < 5 %}
+                    Fase {{ executive.current_phase|int + 1 }}
+                    {% else %}
+                    Jornada Completa!
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Gestão Rápida -->
+<div class="modal fade" id="phaseManagementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Gerenciar Fase</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="phaseManagementContent">
+                    <!-- Conteúdo será carregado dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function managePhase(executiveId, phaseNumber) {
+    // Redirecionar para página de detalhes
+    window.location.href = `/phase/${executiveId}/${phaseNumber}`;
+}
+
+function advancePhase(executiveId) {
+    if (confirm('Tem certeza que deseja avançar para a próxima fase?')) {
+        fetch('/api/phase/advance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                executive_id: executiveId
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showAlert(`Avançado para Fase ${result.new_phase}!`, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert(result.error || 'Erro ao avançar fase', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Erro ao avançar fase', 'danger');
+        });
+    }
+}
+
+// Atualizar automaticamente o progresso a cada 30 segundos
+setInterval(() => {
+    location.reload();
+}, 30000);
+</script>
+
+<style>
+.phase-number {
+    position: relative;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.activities-summary {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+</style>
+{% endblock %}

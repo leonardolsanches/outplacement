@@ -1,12 +1,94 @@
-/* Plataforma Outplacement - Custom Styles */
+/* Plataforma Outplacement - EcoGen.Tech Consultoria */
+
+:root {
+    --ecogen-primary: #2D5935;
+    --ecogen-secondary: #3E7B3E;
+    --ecogen-accent: #FFD700;
+    --ecogen-light: #E8F5E8;
+    --ecogen-dark: #1A3A1A;
+}
 
 body {
     background-color: #f8f9fa;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Navbar personalizada EcoGen.Tech */
+.navbar {
+    background: linear-gradient(135deg, var(--ecogen-primary) 0%, var(--ecogen-secondary) 100%) !important;
+    box-shadow: 0 2px 8px rgba(45, 89, 53, 0.3);
+}
+
 .navbar-brand {
-    font-weight: 600;
+    color: white !important;
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    color: var(--ecogen-accent) !important;
+    transform: scale(1.02);
+}
+
+.navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--ecogen-accent) !important;
+    background-color: rgba(255, 215, 0, 0.1);
+    border-radius: 6px;
+    transform: translateY(-1px);
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item:hover {
+    background-color: var(--ecogen-light);
+    color: var(--ecogen-dark);
+}
+
+.ecogen-logo {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+    border-radius: 50%;
+    background: white;
+    padding: 1px;
+    transition: transform 0.3s ease;
+}
+
+.ecogen-logo:hover {
+    transform: rotate(360deg);
+}
+
+.company-citation {
+    color: var(--ecogen-secondary);
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: -8px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Melhorar cores dos botões */
+.btn-primary {
+    background: linear-gradient(45deg, var(--ecogen-primary), var(--ecogen-secondary));
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, var(--ecogen-dark), var(--ecogen-primary));
+    transform: translateY(-1px);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--ecogen-secondary), var(--ecogen-accent));
 }
 
 .card {

@@ -90,20 +90,29 @@
                             <tr>
                                 <th>Nome</th>
                                 <th>Empresa</th>
-                                <th>Status</th>
-                                <th>Início</th>
+                                <th>Status & Fase</th>
+                                <th>Progresso</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for exec in executives %}
                             <tr>
-                                <td>{{ exec.name }}</td>
+                                <td>
+                                    <strong>{{ exec.name }}</strong>
+                                    <br><small class="text-muted">{{ exec.start_date[:10] }}</small>
+                                </td>
                                 <td>{{ exec.company }}</td>
                                 <td>
                                     <span class="badge bg-success">{{ exec.status.title() }}</span>
+                                    <br><small class="text-muted">Fase {{ exec.current_phase or 1 }}/5</small>
                                 </td>
-                                <td>{{ exec.start_date[:10] }}</td>
+                                <td>
+                                    <div class="progress mb-1" style="height: 8px;">
+                                        <div class="progress-bar bg-info" style="width: {{ exec.overall_progress or 0 }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ exec.overall_progress or 0 }}% completo</small>
+                                </td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="{{ url_for('executive_profile', executive_id=exec.id) }}" class="btn btn-sm btn-outline-primary" title="Ver Perfil">
@@ -120,6 +129,9 @@
                                         </a>
                                         <a href="{{ url_for('coaching_communication', executive_id=exec.id) }}" class="btn btn-sm btn-outline-secondary" title="Chat Coach">
                                             <i class="fas fa-comments"></i>
+                                        </a>
+                                        <a href="{{ url_for('executive_journey', executive_id=exec.id) }}" class="btn btn-sm btn-outline-primary" title="Jornada 5 Fases">
+                                            <i class="fas fa-route"></i>
                                         </a>
                                     </div>
                                 </td>
