@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Relationship Management (CRM){% endblock %}
@@ -140,7 +139,7 @@
         <div class="col-md-6 col-lg-4 mb-3 contact-card" 
              data-temperatura="{{ contact.temperatura }}"
              data-nome="{{ contact.nome }}"
-             data-first-letter="{{ contact.nome[0].upper() if contact.nome else 'A' }}"
+             data-first-letter="{{ contact.empresa[0].upper() if contact.empresa else 'A' }}"
              data-search="{{ (contact.nome + ' ' + contact.empresa).lower() }}">
             <div class="card h-100 contact-card-simple">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -156,35 +155,35 @@
                         <small class="text-muted">Empresa:</small><br>
                         <strong class="company-name">{{ contact.empresa or 'Não informado' }}</strong>
                     </div>
-                    
+
                     {% if contact.cidade or contact.estado %}
                     <div class="mb-2">
                         <small class="text-muted">Localidade:</small><br>
                         <span><i class="fas fa-map-marker-alt me-1 text-muted"></i>{{ contact.cidade }}{% if contact.cidade and contact.estado %}, {% endif %}{{ contact.estado }}</span>
                     </div>
                     {% endif %}
-                    
+
                     {% if contact.relacionado %}
                     <div class="mb-2">
                         <small class="text-muted">Relacionado:</small><br>
                         <span class="badge bg-light text-dark">{{ contact.relacionado }}</span>
                     </div>
                     {% endif %}
-                    
+
                     {% if contact.grau_conexao %}
                     <div class="mb-2">
                         <small class="text-muted">Grau de Conexão:</small><br>
                         <span class="badge bg-secondary">{{ contact.grau_conexao }}</span>
                     </div>
                     {% endif %}
-                    
+
                     {% if contact.segmento %}
                     <div class="mb-2">
                         <small class="text-muted">Segmento:</small><br>
                         <span class="badge bg-primary">{{ contact.segmento }}</span>
                     </div>
                     {% endif %}
-                    
+
                     {% if contact.comentario %}
                     <div class="mb-2">
                         <small class="text-muted">Comentário:</small><br>
@@ -377,18 +376,18 @@
                     <strong>Formato do arquivo CSV:</strong><br>
                     O arquivo deve conter as colunas: <code>nome, empresa, telefone, email, relacionado, temperatura, cidade, estado, grau_conexao, segmento, comentario</code>
                 </div>
-                
+
                 <div class="mb-3">
                     <label class="form-label">Selecione o arquivo CSV</label>
                     <input type="file" class="form-control" id="bulkFile" accept=".csv,.xlsx,.xls">
                 </div>
-                
+
                 <div class="alert alert-success">
                     <i class="fas fa-download me-2"></i>
                     <strong>Template de Importação:</strong><br>
                     Baixe o arquivo de exemplo com dados simulados: <a href="/static/exemplo_upload_crm.csv" download class="alert-link"><strong>exemplo_upload_crm.csv</strong></a>
                 </div>
-                
+
                 <div id="uploadResult" class="mt-3"></div>
             </div>
             <div class="modal-footer">
@@ -429,6 +428,7 @@ function loadContacts() {
     .then(contacts => {
         currentContacts = contacts.sort((a, b) => a.nome.localeCompare(b.nome));
         displayContacts();
+        updateLetterCounts();
     })
     .catch(error => {
         console.error('Error loading contacts:', error);
@@ -445,22 +445,55 @@ function setupAlphabetNavigation() {
     });
 }
 
+// Atualizar contadores por letra
+function updateLetterCounts() {
+    // Contar contatos por letra inicial da empresa
+    const letterCounts = {};
+
+    currentContacts.forEach(contact => {
+        const firstLetter = (contact.empresa || '').charAt(0).toUpperCase();
+        if (firstLetter >= 'A' && firstLetter <= 'Z') {
+            letterCounts[firstLetter] = (letterCounts[firstLetter] || 0) + 1;
+        }
+    });
+
+    // Atualizar badges nos botões
+    document.querySelectorAll('.letter-btn').forEach(btn => {
+        const letter = btn.dataset.letter;
+        if (letter === 'all') {
+            btn.innerHTML = `Todos <span class="badge bg-primary ms-1">${currentContacts.length}</span>`;
+        } else {
+            const count = letterCounts[letter] || 0;
+            if (count > 0) {
+                btn.innerHTML = `${letter} <span class="badge bg-secondary ms-1">${count}</span>`;
+                btn.disabled = false;
+                btn.classList.remove('disabled');
+            } else {
+                btn.innerHTML = letter;
+                btn.disabled = true;
+                btn.classList.add('disabled');
+            }
+        }
+    });
+}
+
+
 // Selecionar letra
 function selectLetter(letter) {
     currentLetter = letter;
-    
+
     // Atualizar visual dos botões
     document.querySelectorAll('.letter-btn').forEach(btn => {
         btn.classList.remove('active');
         btn.classList.remove('btn-primary');
         btn.classList.add('btn-outline-primary');
     });
-    
+
     const activeBtn = document.querySelector(`[data-letter="${letter}"]`);
     activeBtn.classList.add('active');
     activeBtn.classList.add('btn-primary');
     activeBtn.classList.remove('btn-outline-primary');
-    
+
     applyFilters();
 }
 
@@ -477,30 +510,34 @@ function displayContacts() {
                 </div>
             </div>
         `;
+        updateResultsCounter(0);
         return;
     }
-    
+
     container.innerHTML = '';
     currentContacts.forEach(contact => {
         const cardHtml = createContactCard(contact);
         container.insertAdjacentHTML('beforeend', cardHtml);
     });
-    
-    applyFilters();
+
+    // Aplicar filtros após carregar os contatos
+    setTimeout(() => {
+        applyFilters();
+    }, 100);
 }
 
 // Criar card de contato
 function createContactCard(contact) {
-    const firstLetter = contact.nome ? contact.nome[0].toUpperCase() : 'A';
+    const firstLetter = (contact.empresa || '').charAt(0).toUpperCase();
     const temperaturaClass = {
         'frio': 'info',
         'morno': 'warning text-dark',
         'quente': 'danger',
         'pessoal': 'success'
     }[contact.temperatura] || 'secondary';
-    
+
     const temperaturaIcon = contact.temperatura === 'quente' ? '<i class="fas fa-fire me-1"></i>' : '';
-    
+
     return `
         <div class="col-md-6 col-lg-4 mb-3 contact-card" 
              data-temperatura="${contact.temperatura}"
@@ -517,35 +554,35 @@ function createContactCard(contact) {
                         <small class="text-muted">Empresa:</small><br>
                         <strong class="company-name">${contact.empresa || 'Não informado'}</strong>
                     </div>
-                    
+
                     ${contact.cidade || contact.estado ? `
                     <div class="mb-2">
                         <small class="text-muted">Localidade:</small><br>
                         <span><i class="fas fa-map-marker-alt me-1 text-muted"></i>${contact.cidade || ''}${contact.cidade && contact.estado ? ', ' : ''}${contact.estado || ''}</span>
                     </div>
                     ` : ''}
-                    
+
                     ${contact.relacionado ? `
                     <div class="mb-2">
                         <small class="text-muted">Relacionado:</small><br>
                         <span class="badge bg-light text-dark">${contact.relacionado}</span>
                     </div>
                     ` : ''}
-                    
+
                     ${contact.grau_conexao ? `
                     <div class="mb-2">
                         <small class="text-muted">Grau de Conexão:</small><br>
                         <span class="badge bg-secondary">${contact.grau_conexao}</span>
                     </div>
                     ` : ''}
-                    
+
                     ${contact.segmento ? `
                     <div class="mb-2">
                         <small class="text-muted">Segmento:</small><br>
                         <span class="badge bg-primary">${contact.segmento}</span>
                     </div>
                     ` : ''}
-                    
+
                     ${contact.comentario ? `
                     <div class="mb-2">
                         <small class="text-muted">Comentário:</small><br>
@@ -581,43 +618,43 @@ function createContactCard(contact) {
 function viewContact(contactId) {
     const contact = currentContacts.find(c => c.id === contactId);
     if (!contact) return;
-    
+
     const modalBody = document.getElementById('contactDetails');
     modalBody.innerHTML = `
         <div class="row">
             <div class="col-md-6">
                 <strong>Nome:</strong><br>
                 ${contact.nome}<br><br>
-                
+
                 <strong>Empresa:</strong><br>
                 ${contact.empresa || 'Não informado'}<br><br>
-                
+
                 <strong>Telefone:</strong><br>
                 <a href="tel:${contact.telefone}">${contact.telefone || 'Não informado'}</a><br><br>
-                
+
                 <strong>E-mail:</strong><br>
                 <a href="mailto:${contact.email}">${contact.email || 'Não informado'}</a><br><br>
             </div>
             <div class="col-md-6">
                 <strong>Localidade:</strong><br>
                 ${contact.cidade || ''}${contact.cidade && contact.estado ? ', ' : ''}${contact.estado || 'Não informado'}<br><br>
-                
+
                 <strong>Relacionado:</strong><br>
                 ${contact.relacionado || 'Não informado'}<br><br>
-                
+
                 <strong>Grau de Conexão:</strong><br>
                 ${contact.grau_conexao || 'Não informado'}<br><br>
-                
+
                 <strong>Segmento:</strong><br>
                 ${contact.segmento || 'Não informado'}<br><br>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-12">
                 <strong>Temperatura:</strong><br>
                 <span class="badge bg-${getTemperaturaClass(contact.temperatura)}">${contact.temperatura}</span><br><br>
-                
+
                 ${contact.comentario ? `
                 <strong>Comentário:</strong><br>
                 ${contact.comentario}
@@ -625,7 +662,7 @@ function viewContact(contactId) {
             </div>
         </div>
     `;
-    
+
     new bootstrap.Modal(document.getElementById('viewContactModal')).show();
 }
 
@@ -634,7 +671,7 @@ function addContact() {
     const form = document.getElementById('addContactForm');
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
-    
+
     fetch('/api/crm', {
         method: 'POST',
         headers: {
@@ -663,15 +700,15 @@ function addContact() {
 function uploadBulk() {
     const fileInput = document.getElementById('bulkFile');
     const file = fileInput.files[0];
-    
+
     if (!file) {
         showAlert('Selecione um arquivo CSV', 'warning');
         return;
     }
-    
+
     const formData = new FormData();
     formData.append('file', file);
-    
+
     fetch('/api/crm/upload', {
         method: 'POST',
         body: formData
@@ -679,7 +716,7 @@ function uploadBulk() {
     .then(response => response.json())
     .then(result => {
         const resultDiv = document.getElementById('uploadResult');
-        
+
         if (result.success) {
             resultDiv.innerHTML = `
                 <div class="alert alert-success">
@@ -712,33 +749,64 @@ document.getElementById('searchContact').addEventListener('input', applyFilters)
 function applyFilters() {
     const temperaturaFilter = document.getElementById('temperaturaFilter').value;
     const searchFilter = document.getElementById('searchContact').value.toLowerCase();
-    
+
     const cards = document.querySelectorAll('.contact-card');
-    
+    let visibleCount = 0;
+
     cards.forEach(card => {
         const temperatura = card.dataset.temperatura;
         const searchText = card.dataset.search;
         const firstLetter = card.dataset.firstLetter;
-        
+
         let show = true;
-        
+
         // Filtro por letra
         if (currentLetter !== 'all' && firstLetter !== currentLetter) show = false;
-        
+
         // Filtro por temperatura
         if (temperaturaFilter && temperatura !== temperaturaFilter) show = false;
-        
+
         // Filtro por busca
         if (searchFilter && !searchText.includes(searchFilter)) show = false;
-        
-        card.style.display = show ? 'block' : 'none';
+
+        if (show) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
     });
+
+    // Atualizar contador de resultados
+    updateResultsCounter(visibleCount);
+}
+
+// Atualizar contador de resultados
+function updateResultsCounter(count) {
+    let counterElement = document.getElementById('resultsCounter');
+    if (!counterElement) {
+        // Criar elemento contador se não existir
+        const filtersRow = document.querySelector('.row.mb-4:nth-of-type(4)'); // Assumindo que é a quarta linha de elementos .row
+        counterElement = document.createElement('div');
+        counterElement.id = 'resultsCounter';
+        counterElement.className = 'col-12 mt-2';
+        filtersRow.appendChild(counterElement);
+    }
+
+    if (count === 0) {
+        counterElement.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Nenhum contato encontrado com os filtros aplicados.</div>';
+    } else if (count === currentContacts.length) {
+        counterElement.innerHTML = `<small class="text-muted">Mostrando todos os ${count} contatos</small>`;
+    } else {
+        counterElement.innerHTML = `<small class="text-muted">Mostrando ${count} de ${currentContacts.length} contatos</small>`;
+    }
 }
 
 function clearFilters() {
     document.getElementById('temperaturaFilter').value = '';
     document.getElementById('searchContact').value = '';
     selectLetter('all');
+    applyFilters();
 }
 
 function contactViaEmail(email) {
@@ -819,6 +887,16 @@ function deleteContact(contactId) {
     transform: scale(1.1);
 }
 
+.letter-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.letter-btn .badge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.3rem;
+}
+
 .card-header {
     background-color: #f8f9fa;
     border-bottom: 1px solid #e9ecef;
@@ -843,7 +921,7 @@ function deleteContact(contactId) {
     .alphabet-nav {
         text-align: left;
     }
-    
+
     .letter-btn {
         min-width: 30px;
         font-size: 0.8rem;

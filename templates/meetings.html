@@ -200,6 +200,10 @@
                         <label class="form-label">Descrição</label>
                         <textarea class="form-control" name="description" rows="3" placeholder="Objetivo do encontro, agenda, materiais necessários..."></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label for="organizer_company" class="form-label">Empresa Organizadora</label>
+                        <input type="text" class="form-control" name="organizer_company" placeholder="Nome da empresa...">
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -220,14 +224,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function addMeeting() {
     const form = document.getElementById('addMeetingForm');
     const formData = new FormData(form);
-    
+
     // Processar participantes selecionados
     const participants = [];
     const checkboxes = form.querySelectorAll('input[name="participants"]:checked');
     checkboxes.forEach(checkbox => {
         participants.push(checkbox.value);
     });
-    
+
     const data = {
         title: formData.get('title'),
         type: formData.get('type'),
@@ -237,9 +241,10 @@ function addMeeting() {
         location: formData.get('location'),
         description: formData.get('description'),
         participants: participants,
-        organizer_id: 'admin'
+        organizer_id: 'admin',
+        organizer_company: formData.get('organizer_company')
     };
-    
+
     fetch('/api/meetings', {
         method: 'POST',
         headers: {
