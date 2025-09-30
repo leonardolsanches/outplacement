@@ -156,6 +156,13 @@
                         <strong class="company-name">{{ contact.empresa or 'Não informado' }}</strong>
                     </div>
 
+                    {% if contact.cargo %}
+                    <div class="mb-2">
+                        <small class="text-muted">Cargo:</small><br>
+                        <span class="badge bg-primary">{{ contact.cargo }}</span>
+                    </div>
+                    {% endif %}
+
                     {% if contact.cidade or contact.estado %}
                     <div class="mb-2">
                         <small class="text-muted">Localidade:</small><br>
@@ -270,6 +277,12 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Cargo</label>
+                            <input type="text" class="form-control" name="cargo" placeholder="Ex: Diretor Comercial, Gerente de TI">
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Telefone</label>
                             <input type="tel" class="form-control" name="telefone" placeholder="(11) 99999-9999">
@@ -374,7 +387,7 @@
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Formato do arquivo CSV:</strong><br>
-                    O arquivo deve conter as colunas: <code>nome, empresa, telefone, email, relacionado, temperatura, cidade, estado, grau_conexao, segmento, comentario</code>
+                    O arquivo deve conter as colunas: <code>nome, empresa, cargo, telefone, email, relacionado, temperatura, cidade, estado, grau_conexao, segmento, comentario</code>
                 </div>
 
                 <div class="mb-3">
@@ -555,6 +568,13 @@ function createContactCard(contact) {
                         <strong class="company-name">${contact.empresa || 'Não informado'}</strong>
                     </div>
 
+                    ${contact.cargo ? `
+                    <div class="mb-2">
+                        <small class="text-muted">Cargo:</small><br>
+                        <span class="badge bg-primary">${contact.cargo}</span>
+                    </div>
+                    ` : ''}
+
                     ${contact.cidade || contact.estado ? `
                     <div class="mb-2">
                         <small class="text-muted">Localidade:</small><br>
@@ -628,6 +648,9 @@ function viewContact(contactId) {
 
                 <strong>Empresa:</strong><br>
                 ${contact.empresa || 'Não informado'}<br><br>
+
+                <strong>Cargo:</strong><br>
+                ${contact.cargo || 'Não informado'}<br><br>
 
                 <strong>Telefone:</strong><br>
                 <a href="tel:${contact.telefone}">${contact.telefone || 'Não informado'}</a><br><br>
