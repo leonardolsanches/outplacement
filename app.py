@@ -1068,6 +1068,10 @@ def api_crm():
             'email': data.get('email', ''),
             'relacionado': data.get('relacionado', ''),
             'temperatura': data.get('temperatura', 'frio'),
+            'cidade': data.get('cidade', ''),
+            'estado': data.get('estado', ''),
+            'grau_conexao': data.get('grau_conexao', ''),
+            'segmento': data.get('segmento', ''),
             'comentario': data.get('comentario', ''),
             'created_at': datetime.now().isoformat(),
             'updated_at': datetime.now().isoformat()
@@ -1114,6 +1118,10 @@ def crm_upload_bulk():
                     'email': row.get('email', row.get('Email', row.get('E-mail', ''))),
                     'relacionado': row.get('relacionado', row.get('Relacionado', '')),
                     'temperatura': row.get('temperatura', row.get('Temperatura', 'frio')).lower(),
+                    'cidade': row.get('cidade', row.get('Cidade', '')),
+                    'estado': row.get('estado', row.get('Estado', '')),
+                    'grau_conexao': row.get('grau_conexao', row.get('Grau_Conexao', row.get('Grau de Conexão', ''))),
+                    'segmento': row.get('segmento', row.get('Segmento', '')),
                     'comentario': row.get('comentario', row.get('Comentario', row.get('Comentário', ''))),
                     'created_at': datetime.now().isoformat(),
                     'updated_at': datetime.now().isoformat()
@@ -1155,6 +1163,10 @@ def api_crm_contact(contact_id):
             contact['email'] = data.get('email', contact['email'])
             contact['relacionado'] = data.get('relacionado', contact['relacionado'])
             contact['temperatura'] = data.get('temperatura', contact['temperatura'])
+            contact['cidade'] = data.get('cidade', contact.get('cidade', ''))
+            contact['estado'] = data.get('estado', contact.get('estado', ''))
+            contact['grau_conexao'] = data.get('grau_conexao', contact.get('grau_conexao', ''))
+            contact['segmento'] = data.get('segmento', contact.get('segmento', ''))
             contact['comentario'] = data.get('comentario', contact['comentario'])
             contact['updated_at'] = datetime.now().isoformat()
             break

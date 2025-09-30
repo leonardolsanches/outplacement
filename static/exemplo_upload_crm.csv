@@ -1,0 +1,11 @@
+nome,empresa,telefone,email,relacionado,temperatura,cidade,estado,grau_conexao,segmento,comentario
+João Silva,Tech Solutions,(11) 99999-1234,joao.silva@tech.com,Cliente,quente,São Paulo,SP,1º Grau,Tecnologia,Contato principal da empresa Tech Solutions
+Maria Santos,Banco Regional SA,(11) 98888-5678,maria.santos@banco.com,Parceira,morno,Rio de Janeiro,RJ,2º Grau,Financeiro,Gerente de relacionamento do banco
+Pedro Costa,Indústria XPTO,(21) 97777-9999,pedro.costa@industria.com,Fornecedor,frio,Curitiba,PR,3º Grau,Industrial,Fornecedor de equipamentos industriais
+Ana Lima,Startup Inovação,(11) 96666-1111,ana.lima@startup.com,Cliente,quente,São Paulo,SP,1º Grau,Tecnologia,CEO da startup de tecnologia
+Carlos Oliveira,Consultoria Global,(11) 95555-2222,carlos@consultoria.com,Pessoal,pessoal,Brasília,DF,1º Grau,Consultoria,Amigo pessoal e consultor
+Fernanda Rocha,Marketing Digital,(21) 94444-3333,fernanda@marketing.com,Parceira,morno,Belo Horizonte,MG,2º Grau,Marketing,Agência de marketing digital
+Roberto Alves,Advocacia & Cia,(11) 93333-4444,roberto@advocacia.com,Fornecedor,quente,São Paulo,SP,1º Grau,Jurídico,Escritório de advocacia parceiro
+Juliana Freitas,RH Estratégico,(11) 92222-5555,juliana@rh.com,Cliente,morno,Porto Alegre,RS,2º Grau,Recursos Humanos,Consultora de recursos humanos
+Marcelo Santos,Fintech Brasil,(21) 91111-6666,marcelo@fintech.com,Cliente,quente,São Paulo,SP,1º Grau,Financeiro,Diretor de tecnologia da fintech
+Patricia Mendes,Eventos Corporativos,(11) 90000-7777,patricia@eventos.com,Fornecedor,frio,Salvador,BA,3º Grau,Eventos,Organizadora de eventos corporativos

@@ -1,0 +1,3 @@
+nome,empresa,telefone,email,relacionado,temperatura,cidade,estado,grau_conexao,segmento,comentario
+João Silva,Tech Solutions,(11) 99999-1234,joao@tech.com,Cliente,quente,São Paulo,SP,1º Grau,Tecnologia,Contato principal
+Maria Santos,Banco SA,(11) 98888-5678,maria@banco.com,Parceira,morno,Rio de Janeiro,RJ,2º Grau,Financeiro,Gerente de relacionamento

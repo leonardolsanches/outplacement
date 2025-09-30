@@ -120,6 +120,13 @@
                         <strong>{{ contact.empresa or 'Não informado' }}</strong>
                     </div>
                     
+                    {% if contact.cidade or contact.estado %}
+                    <div class="mb-2">
+                        <small class="text-muted">Localidade:</small><br>
+                        <span><i class="fas fa-map-marker-alt me-1"></i>{{ contact.cidade }}{% if contact.cidade and contact.estado %}, {% endif %}{{ contact.estado }}</span>
+                    </div>
+                    {% endif %}
+                    
                     <div class="mb-2">
                         <small class="text-muted">Telefone:</small><br>
                         <a href="tel:{{ contact.telefone }}">{{ contact.telefone or 'Não informado' }}</a>
@@ -134,6 +141,20 @@
                     <div class="mb-2">
                         <small class="text-muted">Relacionado:</small><br>
                         <span>{{ contact.relacionado }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if contact.grau_conexao %}
+                    <div class="mb-2">
+                        <small class="text-muted">Grau de Conexão:</small><br>
+                        <span class="badge bg-secondary">{{ contact.grau_conexao }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if contact.segmento %}
+                    <div class="mb-2">
+                        <small class="text-muted">Segmento:</small><br>
+                        <span class="badge bg-primary">{{ contact.segmento }}</span>
                     </div>
                     {% endif %}
                     
@@ -216,10 +237,64 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Relacionado</label>
-                            <input type="text" class="form-control" name="relacionado" placeholder="Ex: Cliente, Parceiro, Fornecedor">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" class="form-control" name="cidade" placeholder="Ex: São Paulo">
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label class="form-label">Estado (UF)</label>
+                            <select class="form-select" name="estado">
+                                <option value="">Selecione...</option>
+                                <option value="AC">AC - Acre</option>
+                                <option value="AL">AL - Alagoas</option>
+                                <option value="AP">AP - Amapá</option>
+                                <option value="AM">AM - Amazonas</option>
+                                <option value="BA">BA - Bahia</option>
+                                <option value="CE">CE - Ceará</option>
+                                <option value="DF">DF - Distrito Federal</option>
+                                <option value="ES">ES - Espírito Santo</option>
+                                <option value="GO">GO - Goiás</option>
+                                <option value="MA">MA - Maranhão</option>
+                                <option value="MT">MT - Mato Grosso</option>
+                                <option value="MS">MS - Mato Grosso do Sul</option>
+                                <option value="MG">MG - Minas Gerais</option>
+                                <option value="PA">PA - Pará</option>
+                                <option value="PB">PB - Paraíba</option>
+                                <option value="PR">PR - Paraná</option>
+                                <option value="PE">PE - Pernambuco</option>
+                                <option value="PI">PI - Piauí</option>
+                                <option value="RJ">RJ - Rio de Janeiro</option>
+                                <option value="RN">RN - Rio Grande do Norte</option>
+                                <option value="RS">RS - Rio Grande do Sul</option>
+                                <option value="RO">RO - Rondônia</option>
+                                <option value="RR">RR - Roraima</option>
+                                <option value="SC">SC - Santa Catarina</option>
+                                <option value="SP">SP - São Paulo</option>
+                                <option value="SE">SE - Sergipe</option>
+                                <option value="TO">TO - Tocantins</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Relacionado</label>
+                            <input type="text" class="form-control" name="relacionado" placeholder="Ex: Cliente, Parceiro">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Grau de Conexão</label>
+                            <select class="form-select" name="grau_conexao">
+                                <option value="">Selecione...</option>
+                                <option value="1º Grau">1º Grau - Direto</option>
+                                <option value="2º Grau">2º Grau - Indireto</option>
+                                <option value="3º Grau">3º Grau - Remoto</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Segmento</label>
+                            <input type="text" class="form-control" name="segmento" placeholder="Ex: Tecnologia, Financeiro">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
                             <label class="form-label">Temperatura *</label>
                             <select class="form-select" name="temperatura" required>
                                 <option value="frio">❄️ Frio - Sem contato recente</option>
@@ -255,7 +330,7 @@
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Formato do arquivo CSV:</strong><br>
-                    O arquivo deve conter as colunas: <code>nome, empresa, telefone, email, relacionado, temperatura, comentario</code>
+                    O arquivo deve conter as colunas: <code>nome, empresa, telefone, email, relacionado, temperatura, cidade, estado, grau_conexao, segmento, comentario</code>
                 </div>
                 
                 <div class="mb-3">
@@ -267,11 +342,17 @@
                     <small class="text-muted">
                         <strong>Exemplo de CSV:</strong><br>
                         <code>
-                        nome,empresa,telefone,email,relacionado,temperatura,comentario<br>
-                        João Silva,Tech Corp,(11) 99999-1111,joao@tech.com,Cliente,quente,Contato principal<br>
-                        Maria Santos,Bank SA,(11) 98888-2222,maria@bank.com,Parceira,morno,Reunião mensal
+                        nome,empresa,telefone,email,relacionado,temperatura,cidade,estado,grau_conexao,segmento,comentario<br>
+                        João Silva,Tech Corp,(11) 99999-1111,joao@tech.com,Cliente,quente,São Paulo,SP,1º Grau,Tecnologia,Contato principal<br>
+                        Maria Santos,Bank SA,(11) 98888-2222,maria@bank.com,Parceira,morno,Rio de Janeiro,RJ,2º Grau,Financeiro,Reunião mensal
                         </code>
                     </small>
+                </div>
+                
+                <div class="alert alert-success">
+                    <i class="fas fa-download me-2"></i>
+                    <strong>Template de Importação:</strong><br>
+                    Baixe o arquivo de exemplo com dados simulados: <a href="/static/exemplo_upload_crm.csv" download class="alert-link"><strong>exemplo_upload_crm.csv</strong></a>
                 </div>
                 
                 <div id="uploadResult" class="mt-3"></div>
