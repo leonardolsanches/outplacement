@@ -9,3 +9,14 @@ Roberto Alves,Advocacia & Cia,(11) 93333-4444,roberto@advocacia.com,Fornecedor,q
 Juliana Freitas,RH Estratégico,(11) 92222-5555,juliana@rh.com,Cliente,morno,Porto Alegre,RS,2º Grau,Recursos Humanos,Consultora de recursos humanos
 Marcelo Santos,Fintech Brasil,(21) 91111-6666,marcelo@fintech.com,Cliente,quente,São Paulo,SP,1º Grau,Financeiro,Diretor de tecnologia da fintech
 Patricia Mendes,Eventos Corporativos,(11) 90000-7777,patricia@eventos.com,Fornecedor,frio,Salvador,BA,3º Grau,Eventos,Organizadora de eventos corporativos
+nome,empresa,telefone,email,relacionado,temperatura,cidade,estado,grau_conexao,segmento,comentario
+Ana Rosa,PUC Angels,(11) 99999-1111,ana@puc.com,Cliente,quente,São Paulo,SP,1º Grau,Educação,Contato principal para projetos de inovação
+Bruno Silva,Virtual Advisory Board,(21) 98888-2222,bruno@vab.com,Parceiro,morno,Rio de Janeiro,RJ,2º Grau,Consultoria,Reuniões mensais sobre estratégia
+Carlos Santos,Programa LIDERNEGRA,(11) 97777-3333,carlos@lider.com,Mentor,pessoal,São Paulo,SP,1º Grau,Diversidade,Mentor em programas de liderança
+Diana Costa,Tech Solutions,(11) 96666-4444,diana@tech.com,Cliente,frio,Campinas,SP,3º Grau,Tecnologia,Último contato há 6 meses
+Eduardo Lima,Bank Corp,(21) 95555-5555,eduardo@bank.com,Fornecedor,morno,Rio de Janeiro,RJ,2º Grau,Financeiro,Prestador de serviços bancários
+Fernanda Oliveira,Consulting SA,(11) 94444-6666,fernanda@consulting.com,Parceira,quente,São Paulo,SP,1º Grau,Consultoria,Parceria estratégica ativa
+Gabriel Pereira,Startup Hub,(11) 93333-7777,gabriel@startup.com,Investidor,pessoal,São Paulo,SP,1º Grau,Tecnologia,Investidor anjo em startups
+Helena Rodrigues,Corporate Academy,(21) 92222-8888,helena@academy.com,Cliente,morno,Rio de Janeiro,RJ,2º Grau,Educação,Treinamentos corporativos
+Igor Ferreira,Legal Partners,(11) 91111-9999,igor@legal.com,Fornecedor,frio,São Paulo,SP,3º Grau,Jurídico,Suporte jurídico eventual
+Julia Almeida,Marketing Pro,(11) 90000-1010,julia@marketing.com,Parceira,quente,São Paulo,SP,1º Grau,Marketing,Campanhas de marketing digital

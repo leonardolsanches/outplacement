@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}Relationship Management (CRM){% endblock %}
@@ -71,6 +72,46 @@
     </div>
 </div>
 
+<!-- Navegação Alfabética -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Navegação por Letra</h6>
+                <div class="alphabet-nav">
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn active" data-letter="all">Todos</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="A">A</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="B">B</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="C">C</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="D">D</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="E">E</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="F">F</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="G">G</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="H">H</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="I">I</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="J">J</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="K">K</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="L">L</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="M">M</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="N">N</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="O">O</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="P">P</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="Q">Q</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="R">R</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="S">S</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="T">T</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="U">U</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="V">V</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="W">W</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="X">X</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="Y">Y</button>
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1 letter-btn" data-letter="Z">Z</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Filtros -->
 <div class="row mb-4">
     <div class="col-md-3">
@@ -83,7 +124,7 @@
         </select>
     </div>
     <div class="col-md-6">
-        <input type="text" class="form-control" id="searchContact" placeholder="Buscar por nome, empresa, email...">
+        <input type="text" class="form-control" id="searchContact" placeholder="Buscar por nome, empresa...">
     </div>
     <div class="col-md-3">
         <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
@@ -98,49 +139,35 @@
         {% for contact in contacts %}
         <div class="col-md-6 col-lg-4 mb-3 contact-card" 
              data-temperatura="{{ contact.temperatura }}"
-             data-search="{{ (contact.nome + ' ' + contact.empresa + ' ' + contact.email).lower() }}">
-            <div class="card h-100">
+             data-nome="{{ contact.nome }}"
+             data-first-letter="{{ contact.nome[0].upper() if contact.nome else 'A' }}"
+             data-search="{{ (contact.nome + ' ' + contact.empresa).lower() }}">
+            <div class="card h-100 contact-card-simple">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">{{ contact.nome }}</h6>
-                    <span class="badge bg-{% if contact.temperatura == 'frio' %}info{% elif contact.temperatura == 'morno' %}warning{% elif contact.temperatura == 'quente' %}danger{% else %}success{% endif %}">
-                        {% if contact.temperatura == 'frio' %}
-                        <i class="fas fa-snowflake me-1"></i>Frio
-                        {% elif contact.temperatura == 'morno' %}
-                        <i class="fas fa-temperature-half me-1"></i>Morno
-                        {% elif contact.temperatura == 'quente' %}
+                    <h6 class="mb-0 contact-name">{{ contact.nome }}</h6>
+                    <span class="badge bg-{% if contact.temperatura == 'frio' %}info{% elif contact.temperatura == 'morno' %}warning text-dark{% elif contact.temperatura == 'quente' %}danger{% else %}success{% endif %} temperatura-badge">
+                        {% if contact.temperatura == 'quente' %}
                         <i class="fas fa-fire me-1"></i>Quente
-                        {% else %}
-                        <i class="fas fa-heart me-1"></i>Pessoal
                         {% endif %}
                     </span>
                 </div>
                 <div class="card-body">
                     <div class="mb-2">
                         <small class="text-muted">Empresa:</small><br>
-                        <strong>{{ contact.empresa or 'Não informado' }}</strong>
+                        <strong class="company-name">{{ contact.empresa or 'Não informado' }}</strong>
                     </div>
                     
                     {% if contact.cidade or contact.estado %}
                     <div class="mb-2">
                         <small class="text-muted">Localidade:</small><br>
-                        <span><i class="fas fa-map-marker-alt me-1"></i>{{ contact.cidade }}{% if contact.cidade and contact.estado %}, {% endif %}{{ contact.estado }}</span>
+                        <span><i class="fas fa-map-marker-alt me-1 text-muted"></i>{{ contact.cidade }}{% if contact.cidade and contact.estado %}, {% endif %}{{ contact.estado }}</span>
                     </div>
                     {% endif %}
-                    
-                    <div class="mb-2">
-                        <small class="text-muted">Telefone:</small><br>
-                        <a href="tel:{{ contact.telefone }}">{{ contact.telefone or 'Não informado' }}</a>
-                    </div>
-                    
-                    <div class="mb-2">
-                        <small class="text-muted">E-mail:</small><br>
-                        <a href="mailto:{{ contact.email }}">{{ contact.email or 'Não informado' }}</a>
-                    </div>
                     
                     {% if contact.relacionado %}
                     <div class="mb-2">
                         <small class="text-muted">Relacionado:</small><br>
-                        <span>{{ contact.relacionado }}</span>
+                        <span class="badge bg-light text-dark">{{ contact.relacionado }}</span>
                     </div>
                     {% endif %}
                     
@@ -161,26 +188,25 @@
                     {% if contact.comentario %}
                     <div class="mb-2">
                         <small class="text-muted">Comentário:</small><br>
-                        <small>{{ contact.comentario[:100] }}{% if contact.comentario|length > 100 %}...{% endif %}</small>
+                        <small class="text-truncate d-block">{{ contact.comentario[:80] }}{% if contact.comentario|length > 80 %}...{% endif %}</small>
                     </div>
                     {% endif %}
-                    
-                    <div class="mt-2">
-                        <small class="text-muted">Cadastrado em: {{ contact.created_at[:10] }}</small>
-                    </div>
                 </div>
-                <div class="card-footer">
+                <div class="card-footer bg-transparent">
                     <div class="btn-group w-100" role="group">
-                        <button class="btn btn-sm btn-outline-primary" onclick="editContact('{{ contact.id }}')">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewContact('{{ contact.id }}')" title="Ver detalhes">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="contactViaEmail('{{ contact.email }}')" title="Enviar e-mail">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="contactViaPhone('{{ contact.telefone }}')" title="Ligar">
+                            <i class="fas fa-phone"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editContact('{{ contact.id }}')" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <a href="mailto:{{ contact.email }}" class="btn btn-sm btn-outline-success">
-                            <i class="fas fa-envelope"></i>
-                        </a>
-                        <a href="tel:{{ contact.telefone }}" class="btn btn-sm btn-outline-info">
-                            <i class="fas fa-phone"></i>
-                        </a>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteContact('{{ contact.id }}')">
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteContact('{{ contact.id }}')" title="Excluir">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -203,6 +229,25 @@
             </div>
         </div>
     {% endif %}
+</div>
+
+<!-- Modal Visualizar Contato -->
+<div class="modal fade" id="viewContactModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Contato</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contactDetails">
+                <!-- Conteúdo será preenchido via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="editContactFromView()">Editar Contato</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal Adicionar Contato Individual -->
@@ -338,17 +383,6 @@
                     <input type="file" class="form-control" id="bulkFile" accept=".csv,.xlsx,.xls">
                 </div>
                 
-                <div class="mb-3">
-                    <small class="text-muted">
-                        <strong>Exemplo de CSV:</strong><br>
-                        <code>
-                        nome,empresa,telefone,email,relacionado,temperatura,cidade,estado,grau_conexao,segmento,comentario<br>
-                        João Silva,Tech Corp,(11) 99999-1111,joao@tech.com,Cliente,quente,São Paulo,SP,1º Grau,Tecnologia,Contato principal<br>
-                        Maria Santos,Bank SA,(11) 98888-2222,maria@bank.com,Parceira,morno,Rio de Janeiro,RJ,2º Grau,Financeiro,Reunião mensal
-                        </code>
-                    </small>
-                </div>
-                
                 <div class="alert alert-success">
                     <i class="fas fa-download me-2"></i>
                     <strong>Template de Importação:</strong><br>
@@ -368,6 +402,233 @@
 </div>
 
 <script>
+let currentContacts = [];
+let currentLetter = 'all';
+
+// Função auxiliar para obter classe da temperatura
+function getTemperaturaClass(temperatura) {
+    const classes = {
+        'frio': 'info',
+        'morno': 'warning',
+        'quente': 'danger',
+        'pessoal': 'success'
+    };
+    return classes[temperatura] || 'secondary';
+}
+
+// Carregar contatos na inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    loadContacts();
+    setupAlphabetNavigation();
+});
+
+// Carregar contatos do servidor
+function loadContacts() {
+    fetch('/api/crm')
+    .then(response => response.json())
+    .then(contacts => {
+        currentContacts = contacts.sort((a, b) => a.nome.localeCompare(b.nome));
+        displayContacts();
+    })
+    .catch(error => {
+        console.error('Error loading contacts:', error);
+    });
+}
+
+// Configurar navegação alfabética
+function setupAlphabetNavigation() {
+    document.querySelectorAll('.letter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const letter = this.dataset.letter;
+            selectLetter(letter);
+        });
+    });
+}
+
+// Selecionar letra
+function selectLetter(letter) {
+    currentLetter = letter;
+    
+    // Atualizar visual dos botões
+    document.querySelectorAll('.letter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-primary');
+    });
+    
+    const activeBtn = document.querySelector(`[data-letter="${letter}"]`);
+    activeBtn.classList.add('active');
+    activeBtn.classList.add('btn-primary');
+    activeBtn.classList.remove('btn-outline-primary');
+    
+    applyFilters();
+}
+
+// Exibir contatos
+function displayContacts() {
+    const container = document.getElementById('contactsList');
+    if (currentContacts.length === 0) {
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-address-book fa-4x text-muted mb-3"></i>
+                    <h4>Nenhum contato encontrado</h4>
+                    <p class="text-muted">Adicione contatos ou ajuste os filtros.</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = '';
+    currentContacts.forEach(contact => {
+        const cardHtml = createContactCard(contact);
+        container.insertAdjacentHTML('beforeend', cardHtml);
+    });
+    
+    applyFilters();
+}
+
+// Criar card de contato
+function createContactCard(contact) {
+    const firstLetter = contact.nome ? contact.nome[0].toUpperCase() : 'A';
+    const temperaturaClass = {
+        'frio': 'info',
+        'morno': 'warning text-dark',
+        'quente': 'danger',
+        'pessoal': 'success'
+    }[contact.temperatura] || 'secondary';
+    
+    const temperaturaIcon = contact.temperatura === 'quente' ? '<i class="fas fa-fire me-1"></i>' : '';
+    
+    return `
+        <div class="col-md-6 col-lg-4 mb-3 contact-card" 
+             data-temperatura="${contact.temperatura}"
+             data-nome="${contact.nome}"
+             data-first-letter="${firstLetter}"
+             data-search="${(contact.nome + ' ' + contact.empresa).toLowerCase()}">
+            <div class="card h-100 contact-card-simple">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 contact-name">${contact.nome}</h6>
+                    ${contact.temperatura === 'quente' ? `<span class="badge bg-${temperaturaClass} temperatura-badge">${temperaturaIcon}Quente</span>` : ''}
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Empresa:</small><br>
+                        <strong class="company-name">${contact.empresa || 'Não informado'}</strong>
+                    </div>
+                    
+                    ${contact.cidade || contact.estado ? `
+                    <div class="mb-2">
+                        <small class="text-muted">Localidade:</small><br>
+                        <span><i class="fas fa-map-marker-alt me-1 text-muted"></i>${contact.cidade || ''}${contact.cidade && contact.estado ? ', ' : ''}${contact.estado || ''}</span>
+                    </div>
+                    ` : ''}
+                    
+                    ${contact.relacionado ? `
+                    <div class="mb-2">
+                        <small class="text-muted">Relacionado:</small><br>
+                        <span class="badge bg-light text-dark">${contact.relacionado}</span>
+                    </div>
+                    ` : ''}
+                    
+                    ${contact.grau_conexao ? `
+                    <div class="mb-2">
+                        <small class="text-muted">Grau de Conexão:</small><br>
+                        <span class="badge bg-secondary">${contact.grau_conexao}</span>
+                    </div>
+                    ` : ''}
+                    
+                    ${contact.segmento ? `
+                    <div class="mb-2">
+                        <small class="text-muted">Segmento:</small><br>
+                        <span class="badge bg-primary">${contact.segmento}</span>
+                    </div>
+                    ` : ''}
+                    
+                    ${contact.comentario ? `
+                    <div class="mb-2">
+                        <small class="text-muted">Comentário:</small><br>
+                        <small class="text-truncate d-block">${contact.comentario.substring(0, 80)}${contact.comentario.length > 80 ? '...' : ''}</small>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="btn-group w-100" role="group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewContact('${contact.id}')" title="Ver detalhes">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="contactViaEmail('${contact.email}')" title="Enviar e-mail">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="contactViaPhone('${contact.telefone}')" title="Ligar">
+                            <i class="fas fa-phone"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editContact('${contact.id}')" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteContact('${contact.id}')" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Visualizar contato completo
+function viewContact(contactId) {
+    const contact = currentContacts.find(c => c.id === contactId);
+    if (!contact) return;
+    
+    const modalBody = document.getElementById('contactDetails');
+    modalBody.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <strong>Nome:</strong><br>
+                ${contact.nome}<br><br>
+                
+                <strong>Empresa:</strong><br>
+                ${contact.empresa || 'Não informado'}<br><br>
+                
+                <strong>Telefone:</strong><br>
+                <a href="tel:${contact.telefone}">${contact.telefone || 'Não informado'}</a><br><br>
+                
+                <strong>E-mail:</strong><br>
+                <a href="mailto:${contact.email}">${contact.email || 'Não informado'}</a><br><br>
+            </div>
+            <div class="col-md-6">
+                <strong>Localidade:</strong><br>
+                ${contact.cidade || ''}${contact.cidade && contact.estado ? ', ' : ''}${contact.estado || 'Não informado'}<br><br>
+                
+                <strong>Relacionado:</strong><br>
+                ${contact.relacionado || 'Não informado'}<br><br>
+                
+                <strong>Grau de Conexão:</strong><br>
+                ${contact.grau_conexao || 'Não informado'}<br><br>
+                
+                <strong>Segmento:</strong><br>
+                ${contact.segmento || 'Não informado'}<br><br>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <strong>Temperatura:</strong><br>
+                <span class="badge bg-${getTemperaturaClass(contact.temperatura)}">${contact.temperatura}</span><br><br>
+                
+                ${contact.comentario ? `
+                <strong>Comentário:</strong><br>
+                ${contact.comentario}
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('viewContactModal')).show();
+}
+
 // Adicionar contato individual
 function addContact() {
     const form = document.getElementById('addContactForm');
@@ -385,7 +646,9 @@ function addContact() {
     .then(result => {
         if (result.success) {
             showAlert('Contato adicionado com sucesso!', 'success');
-            setTimeout(() => location.reload(), 1500);
+            bootstrap.Modal.getInstance(document.getElementById('addContactModal')).hide();
+            form.reset();
+            loadContacts();
         } else {
             showAlert('Erro ao adicionar contato', 'danger');
         }
@@ -426,7 +689,7 @@ function uploadBulk() {
                     ${result.errors.length > 0 ? '<br><small>Erros: ' + result.errors.join(', ') + '</small>' : ''}
                 </div>
             `;
-            setTimeout(() => location.reload(), 3000);
+            loadContacts();
         } else {
             resultDiv.innerHTML = `
                 <div class="alert alert-danger">
@@ -455,10 +718,17 @@ function applyFilters() {
     cards.forEach(card => {
         const temperatura = card.dataset.temperatura;
         const searchText = card.dataset.search;
+        const firstLetter = card.dataset.firstLetter;
         
         let show = true;
         
+        // Filtro por letra
+        if (currentLetter !== 'all' && firstLetter !== currentLetter) show = false;
+        
+        // Filtro por temperatura
         if (temperaturaFilter && temperatura !== temperaturaFilter) show = false;
+        
+        // Filtro por busca
         if (searchFilter && !searchText.includes(searchFilter)) show = false;
         
         card.style.display = show ? 'block' : 'none';
@@ -468,7 +738,23 @@ function applyFilters() {
 function clearFilters() {
     document.getElementById('temperaturaFilter').value = '';
     document.getElementById('searchContact').value = '';
-    applyFilters();
+    selectLetter('all');
+}
+
+function contactViaEmail(email) {
+    if (email && email !== 'Não informado') {
+        window.open(`mailto:${email}`, '_blank');
+    } else {
+        showAlert('E-mail não informado para este contato', 'warning');
+    }
+}
+
+function contactViaPhone(phone) {
+    if (phone && phone !== 'Não informado') {
+        window.open(`tel:${phone}`, '_blank');
+    } else {
+        showAlert('Telefone não informado para este contato', 'warning');
+    }
 }
 
 function editContact(contactId) {
@@ -484,7 +770,7 @@ function deleteContact(contactId) {
         .then(result => {
             if (result.success) {
                 showAlert('Contato excluído!', 'success');
-                setTimeout(() => location.reload(), 1000);
+                loadContacts();
             } else {
                 showAlert('Erro ao excluir contato', 'danger');
             }
@@ -494,28 +780,74 @@ function deleteContact(contactId) {
 </script>
 
 <style>
-.contact-card {
+.contact-card-simple {
     transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
 }
 
-.contact-card:hover {
-    transform: translateY(-2px);
+.contact-card-simple:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.card-header h6 {
+.contact-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.company-name {
+    color: #34495e;
+    font-size: 0.95rem;
+}
+
+.temperatura-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.alphabet-nav {
+    text-align: center;
+}
+
+.letter-btn {
+    min-width: 35px;
+    border-radius: 20px !important;
     font-weight: 600;
 }
 
-.badge {
-    font-size: 0.75rem;
-    padding: 0.35em 0.65em;
+.letter-btn.active {
+    transform: scale(1.1);
 }
 
-code {
+.card-header {
     background-color: #f8f9fa;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 0.9em;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.75rem 1rem;
+}
+
+.card-footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-group .btn {
+    border-radius: 0.25rem !important;
+    margin: 0 1px;
+}
+
+.text-truncate {
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .alphabet-nav {
+        text-align: left;
+    }
+    
+    .letter-btn {
+        min-width: 30px;
+        font-size: 0.8rem;
+    }
 }
 </style>
 {% endblock %}
