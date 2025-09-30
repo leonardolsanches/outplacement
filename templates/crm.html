@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block title %}Relationship Management (CRM){% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-address-book me-2"></i>Relationship Management</h2>
+                <p class="text-muted">Gestão de relacionamentos e contatos estratégicos</p>
+            </div>
+            <div>
+                <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#uploadBulkModal">
+                    <i class="fas fa-file-upload me-1"></i>Upload em Massa
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
+                    <i class="fas fa-plus me-1"></i>Novo Contato
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                <h3 class="mb-0">{{ stats.total }}</h3>
+                <small class="text-muted">Total</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-snowflake fa-2x text-info mb-2"></i>
+                <h3 class="mb-0">{{ stats.frio }}</h3>
+                <small class="text-muted">Frio</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-temperature-half fa-2x text-warning mb-2"></i>
+                <h3 class="mb-0">{{ stats.morno }}</h3>
+                <small class="text-muted">Morno</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-fire fa-2x text-danger mb-2"></i>
+                <h3 class="mb-0">{{ stats.quente }}</h3>
+                <small class="text-muted">Quente</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-heart fa-2x text-success mb-2"></i>
+                <h3 class="mb-0">{{ stats.pessoal }}</h3>
+                <small class="text-muted">Pessoal</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <select class="form-select" id="temperaturaFilter">
+            <option value="">Todas as Temperaturas</option>
+            <option value="frio">Frio</option>
+            <option value="morno">Morno</option>
+            <option value="quente">Quente</option>
+            <option value="pessoal">Pessoal</option>
+        </select>
+    </div>
+    <div class="col-md-6">
+        <input type="text" class="form-control" id="searchContact" placeholder="Buscar por nome, empresa, email...">
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+            <i class="fas fa-times me-1"></i>Limpar Filtros
+        </button>
+    </div>
+</div>
+
+<!-- Lista de Contatos -->
+<div class="row" id="contactsList">
+    {% if contacts %}
+        {% for contact in contacts %}
+        <div class="col-md-6 col-lg-4 mb-3 contact-card" 
+             data-temperatura="{{ contact.temperatura }}"
+             data-search="{{ (contact.nome + ' ' + contact.empresa + ' ' + contact.email).lower() }}">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">{{ contact.nome }}</h6>
+                    <span class="badge bg-{% if contact.temperatura == 'frio' %}info{% elif contact.temperatura == 'morno' %}warning{% elif contact.temperatura == 'quente' %}danger{% else %}success{% endif %}">
+                        {% if contact.temperatura == 'frio' %}
+                        <i class="fas fa-snowflake me-1"></i>Frio
+                        {% elif contact.temperatura == 'morno' %}
+                        <i class="fas fa-temperature-half me-1"></i>Morno
+                        {% elif contact.temperatura == 'quente' %}
+                        <i class="fas fa-fire me-1"></i>Quente
+                        {% else %}
+                        <i class="fas fa-heart me-1"></i>Pessoal
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Empresa:</small><br>
+                        <strong>{{ contact.empresa or 'Não informado' }}</strong>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Telefone:</small><br>
+                        <a href="tel:{{ contact.telefone }}">{{ contact.telefone or 'Não informado' }}</a>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">E-mail:</small><br>
+                        <a href="mailto:{{ contact.email }}">{{ contact.email or 'Não informado' }}</a>
+                    </div>
+                    
+                    {% if contact.relacionado %}
+                    <div class="mb-2">
+                        <small class="text-muted">Relacionado:</small><br>
+                        <span>{{ contact.relacionado }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if contact.comentario %}
+                    <div class="mb-2">
+                        <small class="text-muted">Comentário:</small><br>
+                        <small>{{ contact.comentario[:100] }}{% if contact.comentario|length > 100 %}...{% endif %}</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-2">
+                        <small class="text-muted">Cadastrado em: {{ contact.created_at[:10] }}</small>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100" role="group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="editContact('{{ contact.id }}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <a href="mailto:{{ contact.email }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        <a href="tel:{{ contact.telefone }}" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteContact('{{ contact.id }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-address-book fa-4x text-muted mb-3"></i>
+                <h4>Nenhum contato cadastrado</h4>
+                <p class="text-muted">Comece adicionando contatos individualmente ou faça upload em massa.</p>
+                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addContactModal">
+                    <i class="fas fa-plus me-1"></i>Adicionar Contato
+                </button>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadBulkModal">
+                    <i class="fas fa-file-upload me-1"></i>Upload em Massa
+                </button>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal Adicionar Contato Individual -->
+<div class="modal fade" id="addContactModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Contato</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addContactForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nome *</label>
+                            <input type="text" class="form-control" name="nome" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Empresa</label>
+                            <input type="text" class="form-control" name="empresa">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Telefone</label>
+                            <input type="tel" class="form-control" name="telefone" placeholder="(11) 99999-9999">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-control" name="email">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Relacionado</label>
+                            <input type="text" class="form-control" name="relacionado" placeholder="Ex: Cliente, Parceiro, Fornecedor">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Temperatura *</label>
+                            <select class="form-select" name="temperatura" required>
+                                <option value="frio">❄️ Frio - Sem contato recente</option>
+                                <option value="morno">🌡️ Morno - Contato ocasional</option>
+                                <option value="quente">🔥 Quente - Contato frequente</option>
+                                <option value="pessoal">💚 Pessoal - Relacionamento próximo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Comentário</label>
+                        <textarea class="form-control" name="comentario" rows="3" placeholder="Observações, notas, histórico de interações..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addContact()">Adicionar Contato</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Upload em Massa -->
+<div class="modal fade" id="uploadBulkModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload em Massa - CSV/XLS</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Formato do arquivo CSV:</strong><br>
+                    O arquivo deve conter as colunas: <code>nome, empresa, telefone, email, relacionado, temperatura, comentario</code>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Selecione o arquivo CSV</label>
+                    <input type="file" class="form-control" id="bulkFile" accept=".csv,.xlsx,.xls">
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <strong>Exemplo de CSV:</strong><br>
+                        <code>
+                        nome,empresa,telefone,email,relacionado,temperatura,comentario<br>
+                        João Silva,Tech Corp,(11) 99999-1111,joao@tech.com,Cliente,quente,Contato principal<br>
+                        Maria Santos,Bank SA,(11) 98888-2222,maria@bank.com,Parceira,morno,Reunião mensal
+                        </code>
+                    </small>
+                </div>
+                
+                <div id="uploadResult" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="uploadBulk()">
+                    <i class="fas fa-upload me-1"></i>Fazer Upload
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Adicionar contato individual
+function addContact() {
+    const form = document.getElementById('addContactForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/api/crm', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Contato adicionado com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao adicionar contato', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao adicionar contato', 'danger');
+    });
+}
+
+// Upload em massa
+function uploadBulk() {
+    const fileInput = document.getElementById('bulkFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showAlert('Selecione um arquivo CSV', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/crm/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        const resultDiv = document.getElementById('uploadResult');
+        
+        if (result.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Upload concluído!</strong><br>
+                    ${result.added_count} contatos adicionados com sucesso.
+                    ${result.errors.length > 0 ? '<br><small>Erros: ' + result.errors.join(', ') + '</small>' : ''}
+                </div>
+            `;
+            setTimeout(() => location.reload(), 3000);
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Erro:</strong> ${result.error}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro ao fazer upload', 'danger');
+    });
+}
+
+// Filtros
+document.getElementById('temperaturaFilter').addEventListener('change', applyFilters);
+document.getElementById('searchContact').addEventListener('input', applyFilters);
+
+function applyFilters() {
+    const temperaturaFilter = document.getElementById('temperaturaFilter').value;
+    const searchFilter = document.getElementById('searchContact').value.toLowerCase();
+    
+    const cards = document.querySelectorAll('.contact-card');
+    
+    cards.forEach(card => {
+        const temperatura = card.dataset.temperatura;
+        const searchText = card.dataset.search;
+        
+        let show = true;
+        
+        if (temperaturaFilter && temperatura !== temperaturaFilter) show = false;
+        if (searchFilter && !searchText.includes(searchFilter)) show = false;
+        
+        card.style.display = show ? 'block' : 'none';
+    });
+}
+
+function clearFilters() {
+    document.getElementById('temperaturaFilter').value = '';
+    document.getElementById('searchContact').value = '';
+    applyFilters();
+}
+
+function editContact(contactId) {
+    showAlert('Funcionalidade de edição em desenvolvimento', 'info');
+}
+
+function deleteContact(contactId) {
+    if (confirm('Tem certeza que deseja excluir este contato?')) {
+        fetch(`/api/crm/${contactId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showAlert('Contato excluído!', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Erro ao excluir contato', 'danger');
+            }
+        });
+    }
+}
+</script>
+
+<style>
+.contact-card {
+    transition: all 0.3s ease;
+}
+
+.contact-card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header h6 {
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+code {
+    background-color: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+</style>
+{% endblock %}

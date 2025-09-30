@@ -37,6 +37,7 @@ Preferred communication style: Simple, everyday language.
 - **Interview Simulator** - Training module with different interview scenarios (behavioral, technical, leadership)
 - **Progress Reporting** - KPI tracking and performance analytics with export capabilities
 - **SLA Monitoring** - Automated tracking of response times and service level compliance
+- **CRM (Relationship Management)** - Contact management system with temperature classification (frio/morno/quente/pessoal) and bulk CSV/XLS upload capability
 
 ## Design Patterns
 - **MVC Architecture** - Clear separation of models (JSON data), views (templates), and controllers (Flask routes)

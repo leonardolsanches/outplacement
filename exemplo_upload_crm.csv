@@ -1,0 +1,11 @@
+nome,empresa,telefone,email,relacionado,temperatura,comentario
+João Silva,Tech Solutions,(11) 99999-1234,joao.silva@tech.com,Cliente,quente,Contato principal da empresa Tech Solutions
+Maria Santos,Banco Regional SA,(11) 98888-5678,maria.santos@banco.com,Parceira,morno,Gerente de relacionamento do banco
+Pedro Costa,Indústria XPTO,(21) 97777-9999,pedro.costa@industria.com,Fornecedor,frio,Fornecedor de equipamentos industriais
+Ana Lima,Startup Inovação,(11) 96666-1111,ana.lima@startup.com,Cliente,quente,CEO da startup de tecnologia
+Carlos Oliveira,Consultoria Global,(11) 95555-2222,carlos@consultoria.com,Pessoal,pessoal,Amigo pessoal e consultor
+Fernanda Rocha,Marketing Digital,(21) 94444-3333,fernanda@marketing.com,Parceira,morno,Agência de marketing digital
+Roberto Alves,Advocacia & Cia,(11) 93333-4444,roberto@advocacia.com,Fornecedor,quente,Escritório de advocacia parceiro
+Juliana Freitas,RH Estratégico,(11) 92222-5555,juliana@rh.com,Cliente,morno,Consultora de recursos humanos
+Marcelo Santos,Fintech Brasil,(21) 91111-6666,marcelo@fintech.com,Cliente,quente,Diretor de tecnologia da fintech
+Patricia Mendes,Eventos Corporativos,(11) 90000-7777,patricia@eventos.com,Fornecedor,frio,Organizadora de eventos corporativos

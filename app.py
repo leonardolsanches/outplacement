@@ -38,6 +38,7 @@ DOCUMENTS_FILE = os.path.join(DATA_DIR, 'documents.json')
 COMPANIES_FILE = os.path.join(DATA_DIR, 'companies.json')
 SKILLS_FILE = os.path.join(DATA_DIR, 'skills.json')
 MEETINGS_FILE = os.path.join(DATA_DIR, 'meetings.json')
+CRM_FILE = os.path.join(DATA_DIR, 'crm_contacts.json')
 
 # Inicializar arquivos JSON se não existirem
 def init_json_files():
@@ -53,7 +54,8 @@ def init_json_files():
         DOCUMENTS_FILE: [],
         COMPANIES_FILE: [],
         SKILLS_FILE: [],
-        MEETINGS_FILE: []
+        MEETINGS_FILE: [],
+        CRM_FILE: []
     }
     
     for file_path, default_data in files.items():
@@ -1033,6 +1035,132 @@ def migrate_executive_to_phases(executive):
         }
     }
     return executive
+
+# Sistema de Relationship Management (CRM)
+@app.route('/crm')
+def crm_dashboard():
+    """Dashboard principal do CRM"""
+    contacts = load_json(CRM_FILE)
+    
+    # Estatísticas por temperatura
+    stats = {
+        'total': len(contacts),
+        'frio': len([c for c in contacts if c.get('temperatura') == 'frio']),
+        'morno': len([c for c in contacts if c.get('temperatura') == 'morno']),
+        'quente': len([c for c in contacts if c.get('temperatura') == 'quente']),
+        'pessoal': len([c for c in contacts if c.get('temperatura') == 'pessoal'])
+    }
+    
+    return render_template('crm.html', contacts=contacts, stats=stats)
+
+@app.route('/api/crm', methods=['GET', 'POST'])
+def api_crm():
+    """API para gerenciar contatos do CRM"""
+    if request.method == 'POST':
+        data = request.json or {}
+        contacts = load_json(CRM_FILE)
+        
+        new_contact = {
+            'id': str(uuid.uuid4()),
+            'nome': data.get('nome', ''),
+            'empresa': data.get('empresa', ''),
+            'telefone': data.get('telefone', ''),
+            'email': data.get('email', ''),
+            'relacionado': data.get('relacionado', ''),
+            'temperatura': data.get('temperatura', 'frio'),
+            'comentario': data.get('comentario', ''),
+            'created_at': datetime.now().isoformat(),
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        contacts.append(new_contact)
+        save_json(CRM_FILE, contacts)
+        
+        return jsonify({'success': True, 'contact_id': new_contact['id']})
+    
+    # GET
+    contacts = load_json(CRM_FILE)
+    return jsonify(contacts)
+
+@app.route('/api/crm/upload', methods=['POST'])
+def crm_upload_bulk():
+    """Upload em massa de contatos via CSV/XLS"""
+    import csv
+    import io
+    
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': 'Nenhum arquivo enviado'})
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'Arquivo vazio'})
+    
+    contacts = load_json(CRM_FILE)
+    added_count = 0
+    errors = []
+    
+    try:
+        # Ler o arquivo como CSV
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        csv_reader = csv.DictReader(stream)
+        
+        for row in csv_reader:
+            try:
+                new_contact = {
+                    'id': str(uuid.uuid4()),
+                    'nome': row.get('nome', row.get('Nome', '')),
+                    'empresa': row.get('empresa', row.get('Empresa', '')),
+                    'telefone': row.get('telefone', row.get('Telefone', '')),
+                    'email': row.get('email', row.get('Email', row.get('E-mail', ''))),
+                    'relacionado': row.get('relacionado', row.get('Relacionado', '')),
+                    'temperatura': row.get('temperatura', row.get('Temperatura', 'frio')).lower(),
+                    'comentario': row.get('comentario', row.get('Comentario', row.get('Comentário', ''))),
+                    'created_at': datetime.now().isoformat(),
+                    'updated_at': datetime.now().isoformat()
+                }
+                
+                contacts.append(new_contact)
+                added_count += 1
+            except Exception as e:
+                errors.append(f"Erro na linha {added_count + 1}: {str(e)}")
+        
+        save_json(CRM_FILE, contacts)
+        
+        return jsonify({
+            'success': True,
+            'added_count': added_count,
+            'errors': errors
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Erro ao processar arquivo: {str(e)}'})
+
+@app.route('/api/crm/<contact_id>', methods=['PUT', 'DELETE'])
+def api_crm_contact(contact_id):
+    """Atualizar ou deletar contato específico"""
+    contacts = load_json(CRM_FILE)
+    
+    if request.method == 'DELETE':
+        contacts = [c for c in contacts if c['id'] != contact_id]
+        save_json(CRM_FILE, contacts)
+        return jsonify({'success': True})
+    
+    # PUT - Atualizar
+    data = request.json or {}
+    for contact in contacts:
+        if contact['id'] == contact_id:
+            contact['nome'] = data.get('nome', contact['nome'])
+            contact['empresa'] = data.get('empresa', contact['empresa'])
+            contact['telefone'] = data.get('telefone', contact['telefone'])
+            contact['email'] = data.get('email', contact['email'])
+            contact['relacionado'] = data.get('relacionado', contact['relacionado'])
+            contact['temperatura'] = data.get('temperatura', contact['temperatura'])
+            contact['comentario'] = data.get('comentario', contact['comentario'])
+            contact['updated_at'] = datetime.now().isoformat()
+            break
+    
+    save_json(CRM_FILE, contacts)
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     init_json_files()
