@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block title %}Workshops & Palestras{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-presentation me-2"></i>Workshops & Palestras</h2>
+                <p class="text-muted">Facilitação com IA para conteúdo e ferramentas de coaching</p>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newWorkshopModal">
+                <i class="fas fa-plus me-1"></i>Novo Workshop/Palestra
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-chalkboard-teacher fa-2x text-primary mb-2"></i>
+                <h3 class="mb-0">{{ stats.total_workshops }}</h3>
+                <small class="text-muted">Total de Eventos</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-calendar-check fa-2x text-success mb-2"></i>
+                <h3 class="mb-0">{{ stats.proximos }}</h3>
+                <small class="text-muted">Próximos</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-check-double fa-2x text-info mb-2"></i>
+                <h3 class="mb-0">{{ stats.concluidos }}</h3>
+                <small class="text-muted">Concluídos</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-user-graduate fa-2x text-warning mb-2"></i>
+                <h3 class="mb-0">{{ stats.total_participantes }}</h3>
+                <small class="text-muted">Participantes</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Workshops -->
+<div class="row">
+    {% if workshops %}
+        {% for workshop in workshops %}
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #2D5935 0%, #3E7B3E 100%); color: white;">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="mb-0">
+                                {% if workshop.tipo == 'workshop' %}
+                                <i class="fas fa-hands-helping me-2"></i>
+                                {% else %}
+                                <i class="fas fa-microphone me-2"></i>
+                                {% endif %}
+                                {{ workshop.titulo }}
+                            </h5>
+                            <small>{{ workshop.data }} | {{ workshop.horario_inicio }} - {{ workshop.horario_fim }}</small>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="badge {% if workshop.status == 'agendado' %}bg-warning{% elif workshop.status == 'em_andamento' %}bg-success{% else %}bg-secondary{% endif %} px-3 py-2">
+                                {{ workshop.status|upper|replace('_', ' ') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p>{{ workshop.descricao or 'Sem descrição' }}</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong><i class="fas fa-map-marker-alt me-1"></i>Local:</strong> {{ workshop.local }}</p>
+                                    <p class="mb-2"><strong><i class="fas fa-user-tie me-1"></i>Facilitador:</strong> {{ workshop.facilitador }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong><i class="fas fa-users me-1"></i>Público:</strong> {{ workshop.publico_alvo or 'Geral' }}</p>
+                                    <p class="mb-2"><strong><i class="fas fa-chair me-1"></i>Capacidade:</strong> {{ workshop.participantes_confirmados }}/{{ workshop.capacidade_maxima }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary btn-sm" onclick="openContentGenerator('{{ workshop.id }}', '{{ workshop.titulo }}')">
+                                    <i class="fas fa-robot me-1"></i>Gerador de Conteúdo IA
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" onclick="viewWorkshop('{{ workshop.id }}')">
+                                    <i class="fas fa-eye me-1"></i>Ver Detalhes
+                                </button>
+                                <button class="btn btn-outline-info btn-sm" onclick="viewAiContent('{{ workshop.id }}')">
+                                    <i class="fas fa-file-alt me-1"></i>Conteúdos Gerados ({{ workshop.ai_content|length }})
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-3"></i>
+                <h4>Nenhum workshop ou palestra cadastrado</h4>
+                <p class="text-muted">Comece criando seu primeiro evento!</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newWorkshopModal">
+                    <i class="fas fa-plus me-1"></i>Criar Primeiro Evento
+                </button>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal Novo Workshop -->
+<div class="modal fade" id="newWorkshopModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Workshop/Palestra</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newWorkshopForm">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Tipo *</label>
+                            <select class="form-select" name="tipo" required>
+                                <option value="workshop">Workshop</option>
+                                <option value="palestra">Palestra</option>
+                                <option value="treinamento">Treinamento</option>
+                            </select>
+                        </div>
+                        <div class="col-md-9 mb-3">
+                            <label class="form-label">Título *</label>
+                            <input type="text" class="form-control" name="titulo" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="descricao" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Data *</label>
+                            <input type="date" class="form-control" name="data" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Horário Início *</label>
+                            <input type="time" class="form-control" name="horario_inicio" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Horário Fim *</label>
+                            <input type="time" class="form-control" name="horario_fim" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Local</label>
+                            <input type="text" class="form-control" name="local" value="Online">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Público Alvo</label>
+                            <input type="text" class="form-control" name="publico_alvo" placeholder="Ex: Líderes, Gestores">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Capacidade Máxima</label>
+                        <input type="number" class="form-control" name="capacidade_maxima" value="100">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="createWorkshop()">Criar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Gerador de Conteúdo IA -->
+<div class="modal fade" id="contentGeneratorModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #2D5935 0%, #FFD700 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-magic me-2"></i>Gerador de Conteúdo com IA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="currentWorkshopId">
+                
+                <div class="alert alert-success">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Workshop:</strong> <span id="workshopTitle"></span>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Tema Específico</label>
+                        <input type="text" class="form-control" id="contentTema" placeholder="Ex: Gestão de Conflitos">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Duração</label>
+                        <select class="form-select" id="contentDuracao">
+                            <option value="1 hora">1 hora</option>
+                            <option value="2 horas" selected>2 horas</option>
+                            <option value="4 horas">4 horas</option>
+                            <option value="8 horas">8 horas (dia inteiro)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-outline-primary" onclick="generateContent('agenda')">
+                                <i class="fas fa-list me-1"></i>Agenda
+                            </button>
+                            <button class="btn btn-outline-success" onclick="generateContent('apresentacao')">
+                                <i class="fas fa-file-powerpoint me-1"></i>Apresentação
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="generateContent('atividades')">
+                                <i class="fas fa-running me-1"></i>Atividades
+                            </button>
+                            <button class="btn btn-outline-info" onclick="generateContent('ferramentas')">
+                                <i class="fas fa-toolbox me-1"></i>Ferramentas
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="generateContent('slides')">
+                                <i class="fas fa-sliders-h me-1"></i>Roteiro Slides
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="generatedContent" class="card" style="display: none;">
+                    <div class="card-header bg-light">
+                        <strong id="contentType"></strong>
+                    </div>
+                    <div class="card-body">
+                        <div id="contentBody" style="white-space: pre-wrap;"></div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-primary" onclick="copyContent()">
+                            <i class="fas fa-copy me-1"></i>Copiar
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="downloadContent()">
+                            <i class="fas fa-download me-1"></i>Download
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="contentLoading" class="text-center py-5" style="display: none;">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Gerando...</span>
+                    </div>
+                    <p class="mt-3">A IA está criando o conteúdo personalizado...</p>
+                    <small class="text-muted">Isso pode levar alguns segundos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function createWorkshop() {
+    const form = document.getElementById('newWorkshopForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/api/workshops', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('Workshop criado com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        }
+    });
+}
+
+function openContentGenerator(workshopId, title) {
+    document.getElementById('currentWorkshopId').value = workshopId;
+    document.getElementById('workshopTitle').textContent = title;
+    document.getElementById('contentTema').value = title;
+    document.getElementById('generatedContent').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('contentGeneratorModal')).show();
+}
+
+function generateContent(type) {
+    const workshopId = document.getElementById('currentWorkshopId').value;
+    const tema = document.getElementById('contentTema').value;
+    const duracao = document.getElementById('contentDuracao').value;
+    
+    document.getElementById('contentLoading').style.display = 'block';
+    document.getElementById('generatedContent').style.display = 'none';
+    
+    fetch(`/api/workshops/${workshopId}/ai-content`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ type: type, tema: tema, duracao: duracao })
+    })
+    .then(response => response.json())
+    .then(result => {
+        document.getElementById('contentLoading').style.display = 'none';
+        if (result.success) {
+            const typeNames = {
+                'agenda': 'Agenda Detalhada',
+                'apresentacao': 'Outline de Apresentação',
+                'atividades': 'Atividades Práticas',
+                'ferramentas': 'Ferramentas de Coaching',
+                'slides': 'Roteiro de Slides'
+            };
+            document.getElementById('contentType').textContent = typeNames[type];
+            document.getElementById('contentBody').textContent = result.content;
+            document.getElementById('generatedContent').style.display = 'block';
+        } else {
+            showAlert('Erro ao gerar conteúdo: ' + result.error, 'danger');
+        }
+    })
+    .catch(error => {
+        document.getElementById('contentLoading').style.display = 'none';
+        showAlert('Erro ao conectar com a IA', 'danger');
+    });
+}
+
+function copyContent() {
+    const content = document.getElementById('contentBody').textContent;
+    navigator.clipboard.writeText(content).then(() => {
+        showAlert('Conteúdo copiado!', 'success');
+    });
+}
+
+function downloadContent() {
+    const content = document.getElementById('contentBody').textContent;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'conteudo-workshop.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function viewWorkshop(id) {
+    showAlert('Funcionalidade em desenvolvimento', 'info');
+}
+
+function viewAiContent(id) {
+    showAlert('Funcionalidade em desenvolvimento', 'info');
+}
+</script>
+{% endblock %}

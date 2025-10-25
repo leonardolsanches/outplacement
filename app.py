@@ -39,6 +39,13 @@ COMPANIES_FILE = os.path.join(DATA_DIR, 'companies.json')
 SKILLS_FILE = os.path.join(DATA_DIR, 'skills.json')
 MEETINGS_FILE = os.path.join(DATA_DIR, 'meetings.json')
 CRM_FILE = os.path.join(DATA_DIR, 'crm_contacts.json')
+GROUP_SESSIONS_FILE = os.path.join(DATA_DIR, 'group_sessions.json')
+WORKSHOPS_FILE = os.path.join(DATA_DIR, 'workshops.json')
+
+# Diretório de backups
+BACKUP_DIR = 'backups'
+if not os.path.exists(BACKUP_DIR):
+    os.makedirs(BACKUP_DIR)
 
 # Inicializar arquivos JSON se não existirem
 def init_json_files():
@@ -55,7 +62,9 @@ def init_json_files():
         COMPANIES_FILE: [],
         SKILLS_FILE: [],
         MEETINGS_FILE: [],
-        CRM_FILE: []
+        CRM_FILE: [],
+        GROUP_SESSIONS_FILE: [],
+        WORKSHOPS_FILE: []
     }
     
     for file_path, default_data in files.items():
@@ -808,6 +817,7 @@ def api_meetings():
             'title': data.get('title', ''),
             'description': data.get('description', ''),
             'organizer_id': data.get('organizer_id', ''),
+            'organizer_company': data.get('organizer_company', ''),
             'participants': data.get('participants', []),
             'date': data.get('date', ''),
             'time': data.get('time', ''),
@@ -825,7 +835,9 @@ def api_meetings():
     
     # GET
     meetings = load_json(MEETINGS_FILE)
-    return jsonify(meetings)
+    # Ordenar por título (que pode incluir nome da empresa)
+    meetings_sorted = sorted(meetings, key=lambda x: x.get('title', '').lower())
+    return jsonify(meetings_sorted)
 
 # Sistema de Comunicação Coach-Executivo
 @app.route('/coaching/<executive_id>')
@@ -1064,6 +1076,7 @@ def api_crm():
             'id': str(uuid.uuid4()),
             'nome': data.get('nome', ''),
             'empresa': data.get('empresa', ''),
+            'cargo': data.get('cargo', ''),
             'telefone': data.get('telefone', ''),
             'email': data.get('email', ''),
             'relacionado': data.get('relacionado', ''),
@@ -1114,6 +1127,7 @@ def crm_upload_bulk():
                     'id': str(uuid.uuid4()),
                     'nome': row.get('nome', row.get('Nome', '')),
                     'empresa': row.get('empresa', row.get('Empresa', '')),
+                    'cargo': row.get('cargo', row.get('Cargo', '')),
                     'telefone': row.get('telefone', row.get('Telefone', '')),
                     'email': row.get('email', row.get('Email', row.get('E-mail', ''))),
                     'relacionado': row.get('relacionado', row.get('Relacionado', '')),
@@ -1159,6 +1173,7 @@ def api_crm_contact(contact_id):
         if contact['id'] == contact_id:
             contact['nome'] = data.get('nome', contact['nome'])
             contact['empresa'] = data.get('empresa', contact['empresa'])
+            contact['cargo'] = data.get('cargo', contact.get('cargo', ''))
             contact['telefone'] = data.get('telefone', contact['telefone'])
             contact['email'] = data.get('email', contact['email'])
             contact['relacionado'] = data.get('relacionado', contact['relacionado'])
@@ -1173,6 +1188,401 @@ def api_crm_contact(contact_id):
     
     save_json(CRM_FILE, contacts)
     return jsonify({'success': True})
+
+# ============================================================================
+# MÓDULO 2: COACHING EM GRUPO (30-40 pessoas)
+# ============================================================================
+
+@app.route('/coaching-grupo')
+def coaching_grupo():
+    """Dashboard de Coaching em Grupo"""
+    sessions = load_json(GROUP_SESSIONS_FILE)
+    
+    # Estatísticas
+    stats = {
+        'total_sessions': len(sessions),
+        'active_sessions': len([s for s in sessions if s.get('status') == 'ativa']),
+        'completed_sessions': len([s for s in sessions if s.get('status') == 'concluida']),
+        'total_participants': sum([len(s.get('participants', [])) for s in sessions])
+    }
+    
+    return render_template('coaching_grupo.html', sessions=sessions, stats=stats)
+
+@app.route('/api/coaching-grupo', methods=['GET', 'POST'])
+def api_coaching_grupo():
+    """API para gerenciar sessões em grupo"""
+    if request.method == 'POST':
+        data = request.json or {}
+        sessions = load_json(GROUP_SESSIONS_FILE)
+        
+        new_session = {
+            'id': str(uuid.uuid4()),
+            'titulo': data.get('titulo', ''),
+            'data': data.get('data', ''),
+            'horario': data.get('horario', ''),
+            'duracao': data.get('duracao', '90'),
+            'facilitador': data.get('facilitador', 'admin'),
+            'tema': data.get('tema', ''),
+            'objetivo': data.get('objetivo', ''),
+            'dinamicas': data.get('dinamicas', []),
+            'participants': data.get('participants', []),
+            'max_participants': data.get('max_participants', 40),
+            'status': 'agendada',
+            'ai_insights': [],
+            'feedback_geral': '',
+            'created_at': datetime.now().isoformat(),
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        sessions.append(new_session)
+        save_json(GROUP_SESSIONS_FILE, sessions)
+        
+        return jsonify({'success': True, 'session_id': new_session['id']})
+    
+    # GET
+    sessions = load_json(GROUP_SESSIONS_FILE)
+    return jsonify(sessions)
+
+@app.route('/api/coaching-grupo/<session_id>/ai-facilitation', methods=['POST'])
+def ai_group_facilitation(session_id):
+    """IA para facilitar dinâmicas de grupo"""
+    import os
+    from openai import OpenAI
+    
+    data = request.json or {}
+    prompt_type = data.get('type', 'icebreaker')
+    context = data.get('context', '')
+    
+    try:
+        client = OpenAI(
+            api_key=os.environ.get('AI_INTEGRATIONS_OPENAI_API_KEY'),
+            base_url=os.environ.get('AI_INTEGRATIONS_OPENAI_BASE_URL')
+        )
+        
+        prompts = {
+            'icebreaker': f"Como facilitador de coaching em grupo com 30-40 pessoas, sugira 3 dinâmicas quebra-gelo criativas e engajadoras para o tema: {context}. Cada dinâmica deve ter: nome, duração, materiais necessários e passo a passo.",
+            'reflexao': f"Crie 5 perguntas poderosas de reflexão em grupo sobre: {context}. As perguntas devem estimular autoconhecimento e compartilhamento de experiências.",
+            'atividade': f"Sugira uma atividade prática de coaching em grupo (30-40 pessoas) sobre: {context}. Inclua: objetivo, instruções, tempo estimado e como facilitar o debriefing.",
+            'feedback': f"Como facilitador, crie um roteiro de feedback coletivo para encerramento de sessão sobre: {context}. Inclua perguntas que promovam aprendizados e próximos passos."
+        }
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Você é um especialista em coaching em grupo e facilitação de grandes grupos. Suas sugestões são práticas, engajadoras e focadas em resultados."},
+                {"role": "user", "content": prompts.get(prompt_type, prompts['icebreaker'])}
+            ],
+            temperature=0.7,
+            max_tokens=1000
+        )
+        
+        ai_suggestion = response.choices[0].message.content
+        
+        # Salvar insight na sessão
+        sessions = load_json(GROUP_SESSIONS_FILE)
+        for session in sessions:
+            if session['id'] == session_id:
+                if 'ai_insights' not in session:
+                    session['ai_insights'] = []
+                session['ai_insights'].append({
+                    'type': prompt_type,
+                    'content': ai_suggestion,
+                    'timestamp': datetime.now().isoformat()
+                })
+                break
+        save_json(GROUP_SESSIONS_FILE, sessions)
+        
+        return jsonify({'success': True, 'suggestion': ai_suggestion})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+# ============================================================================
+# MÓDULO 3: WORKSHOPS E PALESTRAS
+# ============================================================================
+
+@app.route('/workshops')
+def workshops_dashboard():
+    """Dashboard de Workshops e Palestras"""
+    workshops = load_json(WORKSHOPS_FILE)
+    
+    # Estatísticas
+    stats = {
+        'total_workshops': len(workshops),
+        'proximos': len([w for w in workshops if w.get('status') == 'agendado']),
+        'concluidos': len([w for w in workshops if w.get('status') == 'concluido']),
+        'total_participantes': sum([w.get('participantes_confirmados', 0) for w in workshops])
+    }
+    
+    return render_template('workshops.html', workshops=workshops, stats=stats)
+
+@app.route('/api/workshops', methods=['GET', 'POST'])
+def api_workshops():
+    """API para gerenciar workshops e palestras"""
+    if request.method == 'POST':
+        data = request.json or {}
+        workshops = load_json(WORKSHOPS_FILE)
+        
+        new_workshop = {
+            'id': str(uuid.uuid4()),
+            'tipo': data.get('tipo', 'workshop'),
+            'titulo': data.get('titulo', ''),
+            'descricao': data.get('descricao', ''),
+            'data': data.get('data', ''),
+            'horario_inicio': data.get('horario_inicio', ''),
+            'horario_fim': data.get('horario_fim', ''),
+            'local': data.get('local', 'Online'),
+            'facilitador': data.get('facilitador', 'admin'),
+            'co_facilitadores': data.get('co_facilitadores', []),
+            'publico_alvo': data.get('publico_alvo', ''),
+            'capacidade_maxima': data.get('capacidade_maxima', 100),
+            'participantes_confirmados': 0,
+            'agenda': data.get('agenda', []),
+            'materiais': data.get('materiais', []),
+            'ferramentas_coaching': data.get('ferramentas_coaching', []),
+            'status': 'agendado',
+            'ai_content': [],
+            'avaliacoes': [],
+            'created_at': datetime.now().isoformat(),
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        workshops.append(new_workshop)
+        save_json(WORKSHOPS_FILE, workshops)
+        
+        return jsonify({'success': True, 'workshop_id': new_workshop['id']})
+    
+    # GET
+    workshops = load_json(WORKSHOPS_FILE)
+    return jsonify(workshops)
+
+@app.route('/api/workshops/<workshop_id>/ai-content', methods=['POST'])
+def ai_workshop_content(workshop_id):
+    """IA para gerar conteúdo de workshops e palestras"""
+    import os
+    from openai import OpenAI
+    
+    data = request.json or {}
+    content_type = data.get('type', 'agenda')
+    tema = data.get('tema', '')
+    duracao = data.get('duracao', '2 horas')
+    
+    try:
+        client = OpenAI(
+            api_key=os.environ.get('AI_INTEGRATIONS_OPENAI_API_KEY'),
+            base_url=os.environ.get('AI_INTEGRATIONS_OPENAI_BASE_URL')
+        )
+        
+        prompts = {
+            'agenda': f"Crie uma agenda detalhada para um workshop de {duracao} sobre: {tema}. Inclua: horários, tópicos, atividades e tempo para cada bloco. Formato: apresentação, atividades práticas, discussões e encerramento.",
+            'apresentacao': f"Crie um outline de apresentação para palestra sobre: {tema}. Inclua: introdução impactante, 3-5 pontos principais com exemplos práticos, histórias inspiradoras e chamada para ação.",
+            'atividades': f"Sugira 3 atividades práticas interativas para workshop sobre: {tema}. Para cada atividade: objetivo, materiais, instruções passo a passo, tempo estimado e pontos de discussão.",
+            'ferramentas': f"Liste e explique 5 ferramentas de coaching aplicáveis ao tema: {tema}. Para cada ferramenta: nome, como usar, exemplo prático e benefícios esperados.",
+            'slides': f"Crie um roteiro de slides para apresentação sobre: {tema}. Inclua: título de cada slide, conteúdo principal, elementos visuais sugeridos e notas do apresentador."
+        }
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Você é um especialista em design instrucional e facilitação de workshops. Cria conteúdos engajadores, práticos e com alto impacto de aprendizagem."},
+                {"role": "user", "content": prompts.get(content_type, prompts['agenda'])}
+            ],
+            temperature=0.7,
+            max_tokens=1500
+        )
+        
+        ai_content = response.choices[0].message.content
+        
+        # Salvar conteúdo no workshop
+        workshops = load_json(WORKSHOPS_FILE)
+        for workshop in workshops:
+            if workshop['id'] == workshop_id:
+                if 'ai_content' not in workshop:
+                    workshop['ai_content'] = []
+                workshop['ai_content'].append({
+                    'type': content_type,
+                    'content': ai_content,
+                    'timestamp': datetime.now().isoformat()
+                })
+                break
+        save_json(WORKSHOPS_FILE, workshops)
+        
+        return jsonify({'success': True, 'content': ai_content})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+# ============================================================================
+# SISTEMA DE BACKUP E RESTORE
+# ============================================================================
+
+@app.route('/backup-manager')
+def backup_manager():
+    """Interface de gerenciamento de backups"""
+    import glob
+    
+    # Listar todos os backups existentes
+    backup_files = glob.glob(os.path.join(BACKUP_DIR, '*.zip'))
+    backups = []
+    
+    for backup_file in sorted(backup_files, reverse=True):
+        stat = os.stat(backup_file)
+        backups.append({
+            'filename': os.path.basename(backup_file),
+            'path': backup_file,
+            'size': stat.st_size,
+            'size_mb': round(stat.st_size / (1024 * 1024), 2),
+            'created': datetime.fromtimestamp(stat.st_mtime).isoformat()
+        })
+    
+    # Informações sobre os dados atuais
+    data_info = []
+    for file_path in [USERS_FILE, EXECUTIVES_FILE, CRM_FILE, GROUP_SESSIONS_FILE, WORKSHOPS_FILE]:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                count = len(data) if isinstance(data, list) else 1
+                data_info.append({
+                    'file': os.path.basename(file_path),
+                    'count': count,
+                    'size': os.path.getsize(file_path)
+                })
+    
+    return render_template('backup_manager.html', backups=backups, data_info=data_info)
+
+@app.route('/api/backup/create', methods=['POST'])
+def create_backup():
+    """Criar backup completo dos dados"""
+    import zipfile
+    import shutil
+    
+    try:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_filename = f'backup_{timestamp}.zip'
+        backup_path = os.path.join(BACKUP_DIR, backup_filename)
+        
+        # Criar arquivo ZIP com todos os dados
+        with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Adicionar todos os arquivos JSON da pasta data/
+            for root, dirs, files in os.walk(DATA_DIR):
+                for file in files:
+                    if file.endswith('.json'):
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, os.path.dirname(DATA_DIR))
+                        zipf.write(file_path, arcname)
+        
+        backup_size = os.path.getsize(backup_path)
+        
+        return jsonify({
+            'success': True,
+            'filename': backup_filename,
+            'size': backup_size,
+            'size_mb': round(backup_size / (1024 * 1024), 2),
+            'timestamp': timestamp
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/backup/restore', methods=['POST'])
+def restore_backup():
+    """Restaurar backup"""
+    import zipfile
+    import shutil
+    
+    data = request.json or {}
+    backup_filename = data.get('filename')
+    
+    if not backup_filename:
+        return jsonify({'success': False, 'error': 'Nome do backup não fornecido'})
+    
+    backup_path = os.path.join(BACKUP_DIR, backup_filename)
+    
+    if not os.path.exists(backup_path):
+        return jsonify({'success': False, 'error': 'Arquivo de backup não encontrado'})
+    
+    try:
+        # Criar backup de segurança antes de restaurar
+        safety_backup_path = os.path.join(BACKUP_DIR, f'pre_restore_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip')
+        with zipfile.ZipFile(safety_backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(DATA_DIR):
+                for file in files:
+                    if file.endswith('.json'):
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, os.path.dirname(DATA_DIR))
+                        zipf.write(file_path, arcname)
+        
+        # Extrair backup
+        with zipfile.ZipFile(backup_path, 'r') as zipf:
+            zipf.extractall(os.path.dirname(DATA_DIR))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Backup restaurado com sucesso!',
+            'safety_backup': os.path.basename(safety_backup_path)
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/backup/download/<filename>')
+def download_backup(filename):
+    """Download de arquivo de backup"""
+    from flask import send_file
+    
+    backup_path = os.path.join(BACKUP_DIR, filename)
+    
+    if not os.path.exists(backup_path):
+        return jsonify({'error': 'Backup não encontrado'}), 404
+    
+    return send_file(backup_path, as_attachment=True)
+
+@app.route('/api/backup/delete/<filename>', methods=['DELETE'])
+def delete_backup(filename):
+    """Deletar arquivo de backup"""
+    backup_path = os.path.join(BACKUP_DIR, filename)
+    
+    if not os.path.exists(backup_path):
+        return jsonify({'success': False, 'error': 'Backup não encontrado'})
+    
+    try:
+        os.remove(backup_path)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/backup/auto-backup', methods=['POST'])
+def auto_backup():
+    """Criar backup automático agendado"""
+    try:
+        # Criar backup
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_filename = f'auto_backup_{timestamp}.zip'
+        backup_path = os.path.join(BACKUP_DIR, backup_filename)
+        
+        import zipfile
+        with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(DATA_DIR):
+                for file in files:
+                    if file.endswith('.json'):
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, os.path.dirname(DATA_DIR))
+                        zipf.write(file_path, arcname)
+        
+        # Limpar backups automáticos antigos (manter apenas os 10 mais recentes)
+        import glob
+        auto_backups = sorted(glob.glob(os.path.join(BACKUP_DIR, 'auto_backup_*.zip')))
+        if len(auto_backups) > 10:
+            for old_backup in auto_backups[:-10]:
+                try:
+                    os.remove(old_backup)
+                except:
+                    pass
+        
+        return jsonify({'success': True, 'filename': backup_filename})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     init_json_files()

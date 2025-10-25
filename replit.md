@@ -1,6 +1,8 @@
 # Overview
 
-This is a digital outplacement platform designed to assist executives in their career transition journey. The platform provides individualized support for career planning, professional development, and job placement assistance. It offers comprehensive services including professional profile assessment, resume optimization, interview training, networking guidance, and progress tracking. The system manages the entire outplacement process from initial consultation through successful job placement, with built-in KPI monitoring and SLA compliance tracking.
+This is a digital outplacement and coaching platform designed to assist executives in their career transition journey. The platform provides individualized support for career planning, professional development, and job placement assistance. It offers comprehensive services including professional profile assessment, resume optimization, interview training, networking guidance, and progress tracking. The system manages the entire outplacement process from initial consultation through successful job placement, with built-in KPI monitoring and SLA compliance tracking.
+
+The platform now includes AI-powered coaching modules for group sessions (30-40 people) and workshop/presentation facilitation, using OpenAI integration to generate dynamic content, activities, and facilitation guides.
 
 # User Preferences
 

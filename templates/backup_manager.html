@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Backup & Restore{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-database me-2"></i>Gerenciamento de Backup & Restore</h2>
+        <p class="text-muted">Proteja e restaure seus dados com segurança</p>
+    </div>
+</div>
+
+<!-- Alerta Informativo -->
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Sistema de Armazenamento:</strong> JSON Local (arquivos na pasta <code>data/</code>)<br>
+    <strong>Importante:</strong> Backups são salvos localmente em <code>backups/</code>. Faça download periódico para segurança externa.
+</div>
+
+<!-- Dados Atuais -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-folder-open me-2"></i>Dados Atuais no Sistema</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Arquivo</th>
+                                <th>Registros</th>
+                                <th>Tamanho</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for info in data_info %}
+                            <tr>
+                                <td><code>{{ info.file }}</code></td>
+                                <td><span class="badge bg-primary">{{ info.count }}</span></td>
+                                <td>{{ (info.size / 1024)|round(2) }} KB</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-success" onclick="createBackup()">
+                        <i class="fas fa-save me-1"></i>Criar Backup Agora
+                    </button>
+                    <button class="btn btn-info" onclick="autoBackup()">
+                        <i class="fas fa-clock me-1"></i>Backup Automático
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Backups -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-archive me-2"></i>Backups Disponíveis ({{ backups|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if backups %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Arquivo</th>
+                                    <th>Data/Hora</th>
+                                    <th>Tamanho</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for backup in backups %}
+                                <tr id="backup-{{ loop.index }}">
+                                    <td>
+                                        <code>{{ backup.filename }}</code>
+                                        {% if 'auto_backup' in backup.filename %}
+                                        <span class="badge bg-info ms-2">Auto</span>
+                                        {% endif %}
+                                        {% if 'pre_restore' in backup.filename %}
+                                        <span class="badge bg-warning ms-2">Pré-Restauração</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ backup.created[:19]|replace('T', ' ') }}</td>
+                                    <td>{{ backup.size_mb }} MB</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/api/backup/download/{{ backup.filename }}" class="btn btn-primary">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                            <button class="btn btn-success" onclick="restoreBackup('{{ backup.filename }}')">
+                                                <i class="fas fa-undo"></i>
+                                            </button>
+                                            <button class="btn btn-danger" onclick="deleteBackup('{{ backup.filename }}', {{ loop.index }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                        <h5>Nenhum backup criado ainda</h5>
+                        <p class="text-muted">Crie seu primeiro backup clicando no botão acima</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Guia de Uso -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning">
+                <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Guia Rápido</h6>
+            </div>
+            <div class="card-body">
+                <h6><strong>1. Criar Backup:</strong></h6>
+                <p>Clique em "Criar Backup Agora" para salvar o estado atual de todos os dados.</p>
+                
+                <h6><strong>2. Download Backup:</strong></h6>
+                <p>Clique no ícone <i class="fas fa-download"></i> para baixar o backup para seu computador (recomendado!).</p>
+                
+                <h6><strong>3. Restaurar Backup:</strong></h6>
+                <p><span class="text-danger"><strong>ATENÇÃO:</strong></span> Ao restaurar, os dados atuais serão substituídos. Um backup de segurança é criado automaticamente antes da restauração.</p>
+                
+                <h6><strong>4. Backup Automático:</strong></h6>
+                <p>Cria backups automáticos periódicos e mantém os 10 mais recentes.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function createBackup() {
+    if (!confirm('Criar backup dos dados atuais?')) return;
+    
+    showAlert('Criando backup...', 'info');
+    
+    fetch('/api/backup/create', { method: 'POST' })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                showAlert(`Backup criado: ${result.filename} (${result.size_mb} MB)`, 'success');
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showAlert('Erro: ' + result.error, 'danger');
+            }
+        })
+        .catch(e => showAlert('Erro ao criar backup', 'danger'));
+}
+
+function autoBackup() {
+    if (!confirm('Criar backup automático agora?')) return;
+    
+    fetch('/api/backup/auto-backup', { method: 'POST' })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                showAlert('Backup automático criado!', 'success');
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showAlert('Erro: ' + result.error, 'danger');
+            }
+        });
+}
+
+function restoreBackup(filename) {
+    if (!confirm('ATENÇÃO: Restaurar este backup irá substituir todos os dados atuais!\n\nUm backup de segurança será criado automaticamente antes da restauração.\n\nDeseja continuar?')) {
+        return;
+    }
+    
+    showAlert('Restaurando backup...', 'warning');
+    
+    fetch('/api/backup/restore', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ filename: filename })
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            showAlert(`Backup restaurado com sucesso! Backup de segurança salvo como: ${result.safety_backup}`, 'success');
+            setTimeout(() => location.reload(), 3000);
+        } else {
+            showAlert('Erro: ' + result.error, 'danger');
+        }
+    })
+    .catch(e => showAlert('Erro ao restaurar backup', 'danger'));
+}
+
+function deleteBackup(filename, index) {
+    if (!confirm(`Deletar backup: ${filename}?\n\nEsta ação não pode ser desfeita.`)) {
+        return;
+    }
+    
+    fetch(`/api/backup/delete/${filename}`, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                document.getElementById(`backup-${index}`).remove();
+                showAlert('Backup deletado', 'success');
+            } else {
+                showAlert('Erro: ' + result.error, 'danger');
+            }
+        });
+}
+</script>
+
+<style>
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+code {
+    color: #d63384;
+    background-color: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+</style>
+{% endblock %}

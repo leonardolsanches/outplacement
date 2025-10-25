@@ -65,11 +65,29 @@
                 
                 <div class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-chalkboard-teacher me-1"></i>Coaching & Workshops
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('coaching_grupo') }}">
+                            <i class="fas fa-users me-2"></i>Coaching em Grupo
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('workshops_dashboard') }}">
+                            <i class="fas fa-presentation me-2"></i>Workshops & Palestras
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-user me-1"></i>Administrador
                     </a>
                     <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('backup_manager') }}">
+                            <i class="fas fa-database me-2"></i>Backup & Restore
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ url_for('login') }}">
-                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
                         </a></li>
                     </ul>
                 </div>
